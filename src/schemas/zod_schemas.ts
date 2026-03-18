@@ -30,3 +30,20 @@ export const registerFormSchema = z
     message: "Password do not match",
     path: ["confirm_password"],
   })
+
+export const loginFormSchema = z.object({
+  email_or_username: z
+    .string()
+    .min(1, "Email or Username is required")
+    .refine(
+      (val) => {
+        const isEmail = z.string().email().safeParse(val).success
+        const isUsername = val.length >= 3 && val.length <= 20
+        return isEmail || isUsername
+      },
+      {
+        message: "Please enter a valid email or username",
+      },
+    ),
+  password: z.string().min(1, "Password is required"),
+})

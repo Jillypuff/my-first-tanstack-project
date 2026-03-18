@@ -4,7 +4,8 @@ export default function Header() {
   return (
     <header>
       <Link to="/">Home</Link>
-      <Link to="/facts">Facts</Link>
+      <Link to="/login">Login</Link>
+      <Link to="/register">Register</Link>
     </header>
   )
 }

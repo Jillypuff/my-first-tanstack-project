@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form"
 import { registerFormSchema } from "@schemas/zod_schemas"
 
 const RegisterForm = () => {
-  const { Field, handleSubmit } = useForm({
+  const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: {
       username: "",
       email: "",
@@ -96,6 +96,14 @@ const RegisterForm = () => {
           )
         }}
       </Field>
+      <Subscribe
+        selector={(state) => [state.canSubmit, state.isSubmitting]}
+        children={([canSubmit, isSubmitting]) => (
+          <button type="submit" disabled={!canSubmit}>
+            {isSubmitting ? "Creating account..." : "Register"}
+          </button>
+        )}
+      />
     </form>
   )
 }
