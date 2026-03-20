@@ -1,7 +1,13 @@
 import { useForm } from "@tanstack/react-form"
-import { registerFormSchema } from "@schemas/zod_schemas"
+import { registerFormSchema } from "@schemas/user"
+import { UserCollection } from "@/lib/db"
+import { useNavigate } from "@tanstack/react-router"
+import { supabase } from "@/lib/supabase"
+import TextInput from "../ui/form/TextInput"
 
 const RegisterForm = () => {
+  const navigate = useNavigate()
+
   const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: {
       username: "",
@@ -10,12 +16,30 @@ const RegisterForm = () => {
       confirm_password: "",
     },
     onSubmit: async ({ value }) => {
-      // Call db
-      console.log(value)
+      const { data, error } = await supabase.auth.signUp({
+        email: value.email,
+        password: value.password,
+        options: {
+          data: {
+            username: value.username,
+          },
+        },
+      })
+
+      if (error) throw error
+
+      if (data.user) {
+        UserCollection.insert({
+          id: data.user.id,
+          email: data.user.email!,
+          username: value.username,
+        })
+      }
+
+      navigate({ to: "/" })
     },
     validators: {
       onSubmit: registerFormSchema,
-      onBlur: registerFormSchema,
     },
   })
 
@@ -25,76 +49,23 @@ const RegisterForm = () => {
         e.preventDefault()
         handleSubmit(e)
       }}
+      className=""
     >
       <Field name="username">
-        {(field) => {
-          const { errors } = field.state.meta
-          return (
-            <div className="w-full flex flex-col gap-2">
-              <input
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="username"
-              />
-              {errors.length > 0 && (
-                <span className="text-red-500">{errors[0]?.message}</span>
-              )}
-            </div>
-          )
-        }}
+        {(field) => <TextInput field={field} label="Username" type="text" />}
       </Field>
       <Field name="email">
-        {(field) => {
-          const { errors } = field.state.meta
-          return (
-            <div className="w-full flex flex-col gap-2">
-              <input
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="email"
-              />
-              {errors.length > 0 && (
-                <span className="text-red-500">{errors[0]?.message}</span>
-              )}
-            </div>
-          )
-        }}
+        {(field) => <TextInput field={field} label="Email" type="text" />}
       </Field>
       <Field name="password">
-        {(field) => {
-          const { errors } = field.state.meta
-          return (
-            <div className="w-full flex flex-col gap-2">
-              <input
-                value={field.state.value}
-                type="password"
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="password"
-              />
-              {errors.length > 0 && (
-                <span className="text-red-500">{errors[0]?.message}</span>
-              )}
-            </div>
-          )
-        }}
+        {(field) => (
+          <TextInput field={field} label="Password" type="password" />
+        )}
       </Field>
       <Field name="confirm_password">
-        {(field) => {
-          const { errors } = field.state.meta
-          return (
-            <div className="w-full flex flex-col gap-2">
-              <input
-                value={field.state.value}
-                type="password"
-                onChange={(e) => field.handleChange(e.target.value)}
-                placeholder="confirm_password"
-              />
-              {errors.length > 0 && (
-                <span className="text-red-500">{errors[0]?.message}</span>
-              )}
-            </div>
-          )
-        }}
+        {(field) => (
+          <TextInput field={field} label="Confirm password" type="password" />
+        )}
       </Field>
       <Subscribe
         selector={(state) => [state.canSubmit, state.isSubmitting]}

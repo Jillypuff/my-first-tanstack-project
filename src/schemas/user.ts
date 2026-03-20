@@ -1,35 +1,40 @@
-import z from "zod"
+import { z } from "zod"
 
-export const registerFormSchema = z
-  .object({
-    username: z
-      .string()
-      .min(3, "Username must be at least 3 characters")
-      .max(20, "Username must be less than 20 characters")
-      .regex(
-        /^[a-zA-Z0-0_]+$/,
-        "Username can only contain letters, numbers, and underscores",
-      ),
+export const UserSchema = z.object({
+  id: z.string(),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(20, "Username must be less than 20 characters")
+    .regex(
+      /^[a-zA-Z0-9_]+$/,
+      "Username can only contain letters, numbers, and underscores",
+    ),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .trim()
+    .toLowerCase(),
+})
 
-    email: z
-      .string()
-      .email("Please enter a valid email address")
-      .trim()
-      .toLowerCase(),
+export type User = z.infer<typeof UserSchema>
 
+export const registerFormSchema = UserSchema.omit({ id: true })
+  .extend({
     password: z
       .string()
       .min(8, "Password must be at least 8 characters")
       .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
       .regex(/[a-z]/, "Password must contain at least one lowercase letter")
       .regex(/[0-9]/, "Password must contain at least one number"),
-
     confirm_password: z.string(),
   })
   .refine((data) => data.password === data.confirm_password, {
-    message: "Password do not match",
+    message: "Passwords do not match",
     path: ["confirm_password"],
   })
+
+export type RegisterInput = z.infer<typeof registerFormSchema>
 
 export const loginFormSchema = z.object({
   email_or_username: z
@@ -41,9 +46,9 @@ export const loginFormSchema = z.object({
         const isUsername = val.length >= 3 && val.length <= 20
         return isEmail || isUsername
       },
-      {
-        message: "Please enter a valid email or username",
-      },
+      { message: "Please enter a valid email or username" },
     ),
   password: z.string().min(1, "Password is required"),
 })
+
+export type LoginInput = z.infer<typeof loginFormSchema>
