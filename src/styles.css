@@ -68,23 +68,3 @@ main {
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
 }
 
-.button-wrapper {
-  margin-top: 20px;
-}
-
-button {
-  background-color: var(--accent);
-  color: var(--bg-color);
-  border: none;
-  padding: 0.8rem 1.5rem;
-  border-radius: 8px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  margin-right: 10px;
-}
-
-button:hover {
-  background-color: var(--accent-hover);
-  transform: translateY(-2px);
-}

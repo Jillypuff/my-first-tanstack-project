@@ -42,7 +42,7 @@ const RegisterForm = () => {
         e.preventDefault()
         handleSubmit(e)
       }}
-      className=""
+      className="space-y-4"
     >
       <Field name="email">
         {(field) => <TextInput field={field} label="Email" type="text" />}
@@ -60,7 +60,11 @@ const RegisterForm = () => {
       <Subscribe
         selector={(state) => [state.canSubmit, state.isSubmitting]}
         children={([canSubmit, isSubmitting]) => (
-          <button type="submit" disabled={!canSubmit}>
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="mt-2 h-12 w-full rounded-xl bg-indigo-600 px-4 font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+          >
             {isSubmitting ? "Creating account..." : "Register"}
           </button>
         )}

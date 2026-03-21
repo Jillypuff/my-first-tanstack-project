@@ -1,7 +1,7 @@
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
+import { QueryClientProvider } from "@tanstack/react-query"
+import { queryClient } from "@/lib/queryClient"
 import appCss from "../styles.css?url"
-import Footer from "@components/Footer"
-import Header from "@components/Header"
 
 export const Route = createRootRoute({
   head: () => ({
@@ -33,12 +33,8 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body>
-        <div className="app-layout">
-          <Header />
-          <div className="content-grow">{children}</div>
-          <Footer />
-        </div>
+      <body className="bg-slate-100 text-slate-900">
+        <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
         <Scripts />
       </body>
     </html>
