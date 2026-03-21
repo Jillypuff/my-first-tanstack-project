@@ -45,8 +45,8 @@ const AppSidebar = () => {
       </nav>
 
       <div className="border-t border-slate-800 px-5 py-4">
-        <p className="text-sm font-medium text-white">Alex Johansson</p>
-        <p className="text-xs text-slate-400">alex@example.com</p>
+        <p className="text-sm font-medium text-white">User userson</p>
+        <p className="text-xs text-slate-400">User@example.com</p>
       </div>
     </aside>
   )
