@@ -1,4 +1,3 @@
-import React from 'react'
 import { useForm } from "@tanstack/react-form"
 import { loginFormSchema } from "@schemas/user"
 import { useNavigate } from "@tanstack/react-router"
