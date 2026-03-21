@@ -1,3 +1,4 @@
+import React from 'react'
 import { useForm } from "@tanstack/react-form"
 import { loginFormSchema } from "@schemas/user"
 import { useNavigate } from "@tanstack/react-router"
@@ -30,7 +31,8 @@ const LoginForm = () => {
     <form
       onSubmit={(e) => {
         e.preventDefault()
-        handleSubmit(e)
+        e.stopPropagation()
+        void handleSubmit()
       }}
       className="space-y-4"
     >
