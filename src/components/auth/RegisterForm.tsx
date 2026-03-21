@@ -10,7 +10,6 @@ const RegisterForm = () => {
 
   const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: {
-      username: "",
       email: "",
       password: "",
       confirm_password: "",
@@ -19,11 +18,6 @@ const RegisterForm = () => {
       const { data, error } = await supabase.auth.signUp({
         email: value.email,
         password: value.password,
-        options: {
-          data: {
-            username: value.username,
-          },
-        },
       })
 
       if (error) throw error
@@ -32,7 +26,6 @@ const RegisterForm = () => {
         UserCollection.insert({
           id: data.user.id,
           email: data.user.email!,
-          username: value.username,
         })
       }
 
@@ -51,9 +44,6 @@ const RegisterForm = () => {
       }}
       className=""
     >
-      <Field name="username">
-        {(field) => <TextInput field={field} label="Username" type="text" />}
-      </Field>
       <Field name="email">
         {(field) => <TextInput field={field} label="Email" type="text" />}
       </Field>

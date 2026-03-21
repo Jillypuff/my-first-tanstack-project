@@ -1,10 +1,11 @@
 import { createCollection } from "@tanstack/react-db"
 import { queryCollectionOptions } from "@tanstack/query-db-collection"
 import { UserSchema, type User } from "../schemas/user"
+
 import { queryClient } from "./queryClient"
 import { supabase } from "./supabase"
 
-const UserCollection = createCollection(
+export const UserCollection = createCollection(
   queryCollectionOptions({
     queryKey: ["user"],
     queryClient,
@@ -35,7 +36,6 @@ const UserCollection = createCollection(
 
       const { error } = await supabase.from("profiles").insert({
         id: newUser.id,
-        username: newUser.username,
         email: newUser.email,
       })
       if (error) throw error
@@ -46,7 +46,7 @@ const UserCollection = createCollection(
 
       const { error } = await supabase
         .from("profiles")
-        .update({ username: modified.username, email: modified.email })
+        .update({ email: modified.email })
         .eq("id", modified.id)
       if (error) throw error
     },
@@ -60,18 +60,20 @@ const UserCollection = createCollection(
   }),
 )
 
-export { UserCollection }
-
 /*
-export const application = createCollection(
+const ApplicationCollection = createCollection(
   queryCollectionOptions({
     queryKey: ["application"],
-    schema: Application,
-    getKey: (u) => u.id,
-
+    queryClient,
+    schema: ApplicationSchema,
+    getKey: (user: User) => user.id,
+    
+    queryFn: async () => {
+        return []
+    },
     onInsert: async ({ transaction }) => {},
     onUpdate: async ({ transaction }) => {},
-    onRemove: async ({ transaction }) => {},
+    onDelete: async ({ transaction }) => {},
   }),
 )
 */

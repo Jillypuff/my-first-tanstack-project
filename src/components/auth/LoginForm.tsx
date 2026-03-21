@@ -5,7 +5,7 @@ import TextInput from "../ui/form/TextInput"
 const LoginForm = () => {
   const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: {
-      email_or_username: "",
+      email: "",
       password: "",
     },
     onSubmit: async ({ value }) => {
@@ -24,10 +24,8 @@ const LoginForm = () => {
         handleSubmit(e)
       }}
     >
-      <Field name="email_or_username">
-        {(field) => (
-          <TextInput field={field} label="Email or Username" type="text" />
-        )}
+      <Field name="email">
+        {(field) => <TextInput field={field} label="Email" type="text" />}
       </Field>
 
       <Field name="password">

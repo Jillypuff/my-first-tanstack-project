@@ -2,14 +2,6 @@ import { z } from "zod"
 
 export const UserSchema = z.object({
   id: z.string(),
-  username: z
-    .string()
-    .min(3, "Username must be at least 3 characters")
-    .max(20, "Username must be less than 20 characters")
-    .regex(
-      /^[a-zA-Z0-9_]+$/,
-      "Username can only contain letters, numbers, and underscores",
-    ),
   email: z
     .string()
     .email("Please enter a valid email address")
@@ -37,17 +29,11 @@ export const registerFormSchema = UserSchema.omit({ id: true })
 export type RegisterInput = z.infer<typeof registerFormSchema>
 
 export const loginFormSchema = z.object({
-  email_or_username: z
+  email: z
     .string()
-    .min(1, "Email or Username is required")
-    .refine(
-      (val) => {
-        const isEmail = z.string().email().safeParse(val).success
-        const isUsername = val.length >= 3 && val.length <= 20
-        return isEmail || isUsername
-      },
-      { message: "Please enter a valid email or username" },
-    ),
+    .email("Please enter a valid email address")
+    .trim()
+    .toLowerCase(),
   password: z.string().min(1, "Password is required"),
 })
 
