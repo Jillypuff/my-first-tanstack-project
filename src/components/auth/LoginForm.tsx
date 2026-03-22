@@ -13,12 +13,13 @@ const LoginForm = () => {
       password: "",
     },
     onSubmit: async ({ value }) => {
+      console.log(value)
       const { error } = await supabase.auth.signInWithPassword({
         email: value.email,
         password: value.password,
       })
 
-      if (error) throw error
+      if (error) console.error("LoginForm onSubmit error: ", error)
       navigate({ to: "/" })
     },
     validators: {
@@ -31,7 +32,7 @@ const LoginForm = () => {
       onSubmit={(e) => {
         e.preventDefault()
         e.stopPropagation()
-        void handleSubmit()
+        handleSubmit()
       }}
       className="space-y-4"
     >
