@@ -1,22 +1,27 @@
 import { useForm } from "@tanstack/react-form"
+import { useState } from "react"
 import { registerFormSchema } from "@schemas/user"
 import { UserCollection } from "@/lib/db"
-import { useNavigate } from "@tanstack/react-router"
 import { supabase } from "@/lib/supabase"
 import TextInput from "../ui/form/TextInput"
 
+const emptyRegisterValues = {
+  email: "",
+  password: "",
+  confirm_password: "",
+}
+
 const RegisterForm = () => {
-  const navigate = useNavigate()
+  const [confirmationSentTo, setConfirmationSentTo] = useState<string | null>(
+    null,
+  )
 
   const { Field, handleSubmit, Subscribe } = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-      confirm_password: "",
-    },
-    onSubmit: async ({ value }) => {
+    defaultValues: { ...emptyRegisterValues },
+    onSubmit: async ({ value, formApi }) => {
+      const email = value.email.trim()
       const { data, error } = await supabase.auth.signUp({
-        email: value.email,
+        email,
         password: value.password,
       })
 
@@ -29,7 +34,8 @@ const RegisterForm = () => {
         })
       }
 
-      navigate({ to: "/" })
+      setConfirmationSentTo(email)
+      formApi.reset({ ...emptyRegisterValues }, { keepDefaultValues: false })
     },
     validators: {
       onSubmit: registerFormSchema,
@@ -44,6 +50,27 @@ const RegisterForm = () => {
       }}
       className="space-y-4"
     >
+      {confirmationSentTo ? (
+        <div
+          role="status"
+          className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950"
+        >
+          <p className="font-semibold">Check your email</p>
+          <p className="mt-2 text-emerald-900">
+            We&apos;ve sent a confirmation link to{" "}
+            <span className="font-medium">{confirmationSentTo}</span>. Open that
+            message and follow the link to verify your account before signing
+            in.
+          </p>
+          <button
+            type="button"
+            onClick={() => setConfirmationSentTo(null)}
+            className="mt-3 text-sm font-medium text-emerald-800 underline decoration-emerald-600/40 underline-offset-2 hover:text-emerald-950"
+          >
+            Dismiss
+          </button>
+        </div>
+      ) : null}
       <Field name="email">
         {(field) => <TextInput field={field} label="Email" type="text" />}
       </Field>

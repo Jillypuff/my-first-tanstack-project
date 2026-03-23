@@ -48,6 +48,26 @@ const jobCriteriasEnabledSchema = z
   )
   .max(5, "Max 5 criterias")
 
+const companyRelaxedSchema = z.object({
+  info: z.string(),
+  location: z.string(),
+  homepage: z.string(),
+})
+
+const companyEnabledSchema = z.object({
+  info: z.string(),
+  location: z.string(),
+  homepage: z
+    .string()
+    .refine(
+      (value) => {
+        const trimmed = value.trim()
+        return trimmed === "" || z.string().url().safeParse(trimmed).success
+      },
+      { message: "Homepage must be a valid URL (e.g. https://company.com)" },
+    ),
+})
+
 const buildDetailsSchema = (enabled: ApplicationFeatureId[]) => {
   const hasFeature = (feature: ApplicationFeatureId) => enabled.includes(feature)
 
@@ -57,11 +77,12 @@ const buildDetailsSchema = (enabled: ApplicationFeatureId[]) => {
     job_criterias: hasFeature("job_criterias")
       ? jobCriteriasEnabledSchema
       : jobCriteriasRelaxedSchema,
+    company: hasFeature("company") ? companyEnabledSchema : companyRelaxedSchema,
   })
 }
 
 // Features for the application form
-export type ApplicationFeatureId = "contacts" | "tags" | "job_criterias"
+export type ApplicationFeatureId = "contacts" | "tags" | "job_criterias" | "company"
 
 // Schema for the application form
 export const applicationFormSchema = (enabled: ApplicationFeatureId[] = []) => {
@@ -77,6 +98,12 @@ const applicationContactSchema = z.object({
   note: z.string().default(""),
 })
 
+const applicationCompanySchema = z.object({
+  info: z.string().default(""),
+  location: z.string().default(""),
+  homepage: z.string().default(""),
+})
+
 const applicationDetailsSchema = z.object({
   contacts: z.array(applicationContactSchema).default([]),
   tags: z.array(z.string()).max(5).default([]),
@@ -89,6 +116,11 @@ const applicationDetailsSchema = z.object({
     )
     .max(5)
     .default([]),
+  company: applicationCompanySchema.default({
+    info: "",
+    location: "",
+    homepage: "",
+  }),
 })
 
 // Schema for the application in the database

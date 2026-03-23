@@ -1,7 +1,8 @@
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import ApplicationForm from "@/components/application/ApplicationForm"
+import ApplicationCard from "@/components/application/ApplicationCard"
 import { type ApplicationStatus } from "@/schemas/application"
 import { applicationsQueryOptions } from "@/lib/queries/applications"
 import { supabase } from "@/lib/supabase"
@@ -32,6 +33,11 @@ function ApplicationsPage() {
   const [monthFilter, setMonthFilter] = useState("all")
   const [tagFilter, setTagFilter] = useState<string[]>([])
   const [editingApplicationId, setEditingApplicationId] = useState<string | null>(null)
+  const [expandedApplicationIds, setExpandedApplicationIds] = useState<Set<string>>(
+    () => new Set(),
+  )
+  const editFormSectionRef = useRef<HTMLElement | null>(null)
+  const scrollYBeforeEditRef = useRef<number | null>(null)
   const { data: applications = [], isLoading, error, refetch } = useQuery(
     applicationsQueryOptions,
   )
@@ -101,6 +107,15 @@ function ApplicationsPage() {
     })
   }
 
+  const toggleApplicationExpanded = (applicationId: string) => {
+    setExpandedApplicationIds((previous) => {
+      const next = new Set(previous)
+      if (next.has(applicationId)) next.delete(applicationId)
+      else next.add(applicationId)
+      return next
+    })
+  }
+
   const onDelete = async (applicationId: string) => {
     const shouldDelete = window.confirm("Delete this application?")
     if (!shouldDelete) return
@@ -111,6 +126,14 @@ function ApplicationsPage() {
     }
     await refetch()
   }
+
+  useEffect(() => {
+    if (!editingApplicationId) return
+    if (!editFormSectionRef.current) return
+
+    // Scroll the newly opened edit form into view.
+    editFormSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
+  }, [editingApplicationId])
 
   return (
     <section className="space-y-4">
@@ -218,74 +241,30 @@ function ApplicationsPage() {
           </button>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          <table className="min-w-full border-collapse">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50 text-left text-sm text-slate-600">
-                <th className="px-4 py-3 font-semibold">Company</th>
-                <th className="px-4 py-3 font-semibold">Job Title</th>
-                <th className="px-4 py-3 font-semibold">Date</th>
-                <th className="px-4 py-3 font-semibold">Status</th>
-                <th className="px-4 py-3 font-semibold">Tags</th>
-                <th className="px-4 py-3 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredApplications.map((application) => (
-                <tr key={application.id} className="border-b border-slate-100 text-sm">
-                  <td className="px-4 py-3 text-slate-900">{application.company_name}</td>
-                  <td className="px-4 py-3 text-slate-700">{application.job_title}</td>
-                  <td className="px-4 py-3 text-slate-600">
-                    {new Date(application.date_applied).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-3">
-                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
-                      {application.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1.5">
-                      {application.details.tags.length === 0 ? (
-                        <span className="text-xs text-slate-400">No tags</span>
-                      ) : (
-                        application.details.tags.slice(0, 3).map((tag) => (
-                          <span
-                            key={`${application.id}-${tag}`}
-                            className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700"
-                          >
-                            {tag}
-                          </span>
-                        ))
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditingApplicationId(application.id)}
-                        className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onDelete(application.id)}
-                        className="rounded-lg border border-rose-200 px-3 py-1.5 text-xs font-medium text-rose-700 hover:bg-rose-50"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          {filteredApplications.map((application) => (
+            <ApplicationCard
+              key={application.id}
+              application={application}
+              expanded={expandedApplicationIds.has(application.id)}
+              onToggleExpand={() => toggleApplicationExpanded(application.id)}
+              statusLabel={statusLabel}
+              onEdit={() => {
+                scrollYBeforeEditRef.current =
+                  typeof window !== "undefined" ? window.scrollY : null
+                setEditingApplicationId(application.id)
+              }}
+              onDelete={() => onDelete(application.id)}
+            />
+          ))}
         </div>
       )}
 
       {editingApplication && (
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section
+          ref={editFormSectionRef}
+          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
+        >
           <h2 className="text-2xl font-semibold text-slate-900">Edit Application</h2>
           <p className="mb-4 text-sm text-slate-500">
             Update details for {editingApplication.company_name}.
@@ -308,10 +287,12 @@ function ApplicationsPage() {
                 },
                 tags: editingApplication.details.tags,
                 job_criterias: editingApplication.details.job_criterias,
+                company: editingApplication.details.company,
               },
             }}
             onCancel={() => setEditingApplicationId(null)}
             onSubmitApplication={async (value) => {
+              const scrollYBeforeEdit = scrollYBeforeEditRef.current
               const now = new Date().toISOString()
               const { error } = await supabase
                 .from("applications")
@@ -329,6 +310,10 @@ function ApplicationsPage() {
               if (error) throw error
               setEditingApplicationId(null)
               await refetch()
+
+              if (typeof window !== "undefined" && typeof scrollYBeforeEdit === "number") {
+                window.scrollTo({ top: scrollYBeforeEdit, behavior: "smooth" })
+              }
             }}
           />
         </section>

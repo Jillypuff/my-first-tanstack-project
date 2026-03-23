@@ -2,6 +2,7 @@ import { useForm } from "@tanstack/react-form"
 import { useMemo, useState } from "react"
 import { ApplicationCollection } from "@/lib/db"
 import { supabase } from "@/lib/supabase"
+import { CompanyInfo } from "./FormFeatures/CompanyInfo"
 import { Contacts } from "./FormFeatures/Contacts"
 import { JobCriterias } from "./FormFeatures/JobCriterias"
 import { Tags } from "./FormFeatures/Tags"
@@ -19,6 +20,11 @@ type FormContact = {
   phone: string
   note: string
 }
+type FormCompany = {
+  info: string
+  location: string
+  homepage: string
+}
 type FormValues = {
   company_name: string
   job_title: string
@@ -28,6 +34,7 @@ type FormValues = {
     contacts: FormContact
     tags: string[]
     job_criterias: Array<{ title: string; track: boolean }>
+    company: FormCompany
   }
 }
 
@@ -40,6 +47,7 @@ type NormalizedApplicationInput = {
     contacts: FormContact[]
     tags: string[]
     job_criterias: Array<{ title: string; track: boolean }>
+    company: FormCompany
   }
 }
 
@@ -70,6 +78,12 @@ const FEATURES = [
     description: "Track requirements and skills to work on",
     Component: JobCriterias,
   },
+  {
+    id: "company" as const,
+    title: "Company",
+    description: "Company overview, location, and website",
+    Component: CompanyInfo,
+  },
 ]
 
 const defaultValues: FormValues = {
@@ -86,6 +100,11 @@ const defaultValues: FormValues = {
     },
     tags: [],
     job_criterias: [],
+    company: {
+      info: "",
+      location: "",
+      homepage: "",
+    },
   },
 }
 
@@ -96,6 +115,13 @@ const ApplicationForm = ({
   submitLabel,
   onCancel,
 }: ApplicationFormProps) => {
+  const [saveFeedback, setSaveFeedback] = useState<string | null>(null)
+  const scrollToTop = () => {
+    if (typeof window === "undefined") return
+
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" })
+  }
+
   const mergedInitialValues = useMemo<FormValues>(
     () => ({
       ...defaultValues,
@@ -106,6 +132,10 @@ const ApplicationForm = ({
         contacts: {
           ...defaultValues.details.contacts,
           ...(initialValues?.details?.contacts ?? {}),
+        },
+        company: {
+          ...defaultValues.details.company,
+          ...(initialValues?.details?.company ?? {}),
         },
       },
     }),
@@ -124,6 +154,10 @@ const ApplicationForm = ({
     if (mergedInitialValues.details.job_criterias.length > 0) {
       enabled.push("job_criterias")
     }
+    const co = mergedInitialValues.details.company
+    if ([co.info, co.location, co.homepage].some((v) => v.trim())) {
+      enabled.push("company")
+    }
     return enabled
   })
   const [isFeaturePickerOpen, setIsFeaturePickerOpen] = useState(false)
@@ -134,7 +168,9 @@ const ApplicationForm = ({
 
   const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: mergedInitialValues,
-    onSubmit: async ({ value }) => {
+    onSubmit: async ({ value, formApi }) => {
+      setSaveFeedback(null)
+
       const contact = value.details.contacts
       const hasContactValue = [contact.name, contact.email, contact.phone, contact.note]
         .map((item) => item.trim())
@@ -149,11 +185,36 @@ const ApplicationForm = ({
           contacts: hasContactValue ? [contact] : [],
           tags: value.details.tags,
           job_criterias: value.details.job_criterias,
+          company: value.details.company,
         },
       }
 
       if (onSubmitApplication) {
         await onSubmitApplication(normalizedInput)
+
+        if (mode === "create") {
+          scrollToTop()
+        }
+
+        if (mode === "create") {
+          setSaveFeedback("Application saved successfully.")
+          setEnabledFeatures([])
+          setIsFeaturePickerOpen(false)
+
+          formApi.reset(
+            {
+              ...defaultValues,
+              date_applied: new Date().toISOString().split("T")[0],
+              details: {
+                contacts: { ...defaultValues.details.contacts },
+                tags: [],
+                job_criterias: [],
+                company: { ...defaultValues.details.company },
+              },
+            },
+            { keepDefaultValues: false },
+          )
+        }
         return
       }
 
@@ -167,7 +228,7 @@ const ApplicationForm = ({
 
       const nowIso = new Date().toISOString()
 
-      ApplicationCollection.insert({
+      await ApplicationCollection.insert({
         id: crypto.randomUUID(),
         user_id: authUser.id,
         ...normalizedInput,
@@ -175,6 +236,30 @@ const ApplicationForm = ({
         updated_at: nowIso,
         last_activity_at: nowIso,
       })
+
+      if (mode === "create") {
+        setSaveFeedback("Application saved successfully.")
+        setEnabledFeatures([])
+        setIsFeaturePickerOpen(false)
+
+        formApi.reset(
+          {
+            ...defaultValues,
+            date_applied: new Date().toISOString().split("T")[0],
+            details: {
+              contacts: { ...defaultValues.details.contacts },
+              tags: [],
+              job_criterias: [],
+              company: { ...defaultValues.details.company },
+            },
+          },
+          { keepDefaultValues: false },
+        )
+      }
+
+      if (mode === "create") {
+        scrollToTop()
+      }
     },
     validators: {
       onSubmit: dynamicSchema,
@@ -211,6 +296,11 @@ const ApplicationForm = ({
         }}
         className="space-y-5"
       >
+        {saveFeedback && (
+          <div className="rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800 shadow-sm">
+            {saveFeedback}
+          </div>
+        )}
         <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-5 text-2xl font-semibold text-slate-800">
             Application Details

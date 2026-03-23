@@ -2,6 +2,7 @@ import { useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import { applicationsQueryOptions } from "@/lib/queries/applications"
+import { currentMonthKey, getDashboardTimeDefault } from "@/lib/preferences"
 
 export const Route = createFileRoute("/_app/")({
   component: DashboardPage,
@@ -41,11 +42,14 @@ const statusMeta: Record<
 }
 
 function DashboardPage() {
-  const [selectedMonth, setSelectedMonth] = useState("all")
+  const [selectedMonth, setSelectedMonth] = useState(() =>
+    getDashboardTimeDefault() === "all" ? "all" : currentMonthKey(),
+  )
   const { data: applications = [], isLoading, error } = useQuery(applicationsQueryOptions)
 
   const monthOptions = useMemo(() => {
     const uniqueMonths = new Set<string>()
+    uniqueMonths.add(currentMonthKey())
 
     for (const application of applications) {
       const date = new Date(application.date_applied)

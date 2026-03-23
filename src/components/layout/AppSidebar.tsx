@@ -1,4 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router"
+import { useAuthUser } from "@/lib/store"
 
 const navItems = [
   { to: "/", label: "Dashboard" },
@@ -8,9 +9,18 @@ const navItems = [
 ]
 
 const AppSidebar = () => {
+  const user = useAuthUser()
   const pathname = useRouterState({
     select: (state) => state.location.pathname,
   })
+
+  const displayName =
+    (typeof user?.user_metadata?.full_name === "string"
+      ? user.user_metadata.full_name
+      : null) ||
+    user?.email?.split("@")[0] ||
+    "Account"
+  const displayEmail = user?.email ?? ""
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 flex-col border-r border-slate-800 bg-slate-950 text-slate-200">
@@ -45,8 +55,10 @@ const AppSidebar = () => {
       </nav>
 
       <div className="border-t border-slate-800 px-5 py-4">
-        <p className="text-sm font-medium text-white">User userson</p>
-        <p className="text-xs text-slate-400">User@example.com</p>
+        <p className="text-sm font-medium text-white">{displayName}</p>
+        {displayEmail ? (
+          <p className="text-xs text-slate-400">{displayEmail}</p>
+        ) : null}
       </div>
     </aside>
   )

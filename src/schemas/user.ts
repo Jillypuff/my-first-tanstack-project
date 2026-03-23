@@ -11,14 +11,15 @@ export const UserSchema = z.object({
 
 export type User = z.infer<typeof UserSchema>
 
+const strongPassword = z
+  .string()
+  .min(6, "Password must be at least 6 characters")
+  .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+  .regex(/[0-9]/, "Password must contain at least one number")
+
 export const registerFormSchema = UserSchema.omit({ id: true })
   .extend({
-    password: z
-      .string()
-      .min(8, "Password must be at least 8 characters")
-      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
-      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
-      .regex(/[0-9]/, "Password must contain at least one number"),
+    password: strongPassword,
     confirm_password: z.string(),
   })
   .refine((data) => data.password === data.confirm_password, {
@@ -38,3 +39,15 @@ export const loginFormSchema = z.object({
 })
 
 export type LoginInput = z.infer<typeof loginFormSchema>
+
+export const changePasswordFormSchema = z
+  .object({
+    new_password: strongPassword,
+    confirm_password: z.string(),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: "Passwords do not match",
+    path: ["confirm_password"],
+  })
+
+export type ChangePasswordInput = z.infer<typeof changePasswordFormSchema>

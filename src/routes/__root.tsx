@@ -1,6 +1,8 @@
+import { useEffect } from "react"
 import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router"
 import { QueryClientProvider } from "@tanstack/react-query"
 import { queryClient } from "@/lib/queryClient"
+import { initAuthStore } from "@/lib/store"
 import appCss from "../styles.css?url"
 
 export const Route = createRootRoute({
@@ -28,6 +30,10 @@ export const Route = createRootRoute({
 })
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  useEffect(() => {
+    initAuthStore()
+  }, [])
+
   return (
     <html lang="en">
       <head>
