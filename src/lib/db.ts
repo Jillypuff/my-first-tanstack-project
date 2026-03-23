@@ -5,7 +5,7 @@ import { ApplicationSchema, type Application } from "../schemas/application"
 
 import { queryClient } from "./queryClient"
 import { applicationsQueryKey } from "./queries/applications"
-import { supabase } from "./supabase"
+import { getSupabaseForRequest } from "./supabase-request"
 
 export const UserCollection = createCollection(
   queryCollectionOptions({
@@ -15,6 +15,7 @@ export const UserCollection = createCollection(
     getKey: (user: User) => user.id,
 
     queryFn: async (): Promise<User[]> => {
+      const supabase = await getSupabaseForRequest()
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser()
@@ -34,6 +35,7 @@ export const UserCollection = createCollection(
     },
 
     onInsert: async ({ transaction }) => {
+      const supabase = await getSupabaseForRequest()
       const newUser = transaction.mutations[0].modified
 
       const { error } = await supabase.from("profiles").insert({
@@ -45,6 +47,7 @@ export const UserCollection = createCollection(
     },
 
     onUpdate: async ({ transaction }) => {
+      const supabase = await getSupabaseForRequest()
       const { modified } = transaction.mutations[0]
 
       const { error } = await supabase
@@ -56,6 +59,7 @@ export const UserCollection = createCollection(
     },
 
     onDelete: async ({ transaction }) => {
+      const supabase = await getSupabaseForRequest()
       const id = transaction.mutations[0].key as string
 
       const { error } = await supabase.from("profiles").delete().eq("id", id)
@@ -72,6 +76,7 @@ export const ApplicationCollection = createCollection(
     getKey: (application: Application) => application.id,
 
     queryFn: async (): Promise<Application[]> => {
+      const supabase = await getSupabaseForRequest()
       const {
         data: { user: authUser },
       } = await supabase.auth.getUser()
@@ -90,6 +95,7 @@ export const ApplicationCollection = createCollection(
     },
 
     onInsert: async ({ transaction }) => {
+      const supabase = await getSupabaseForRequest()
       const newApplication = transaction.mutations[0].modified as Application
 
       const { error } = await supabase.from("applications").insert({
@@ -109,6 +115,7 @@ export const ApplicationCollection = createCollection(
     },
 
     onUpdate: async ({ transaction }) => {
+      const supabase = await getSupabaseForRequest()
       const modified = transaction.mutations[0].modified as Application
 
       const { error } = await supabase
@@ -128,6 +135,7 @@ export const ApplicationCollection = createCollection(
     },
 
     onDelete: async ({ transaction }) => {
+      const supabase = await getSupabaseForRequest()
       const id = transaction.mutations[0].key as string
 
       const { error } = await supabase.from("applications").delete().eq("id", id)

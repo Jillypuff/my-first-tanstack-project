@@ -1,9 +1,10 @@
 import { ApplicationSchema, type Application } from "@/schemas/application"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 
 export const applicationsQueryKey = ["applications"] as const
 
 export const fetchApplications = async (): Promise<Application[]> => {
+  const supabase = await getSupabaseForRequest()
   const {
     data: { user },
   } = await supabase.auth.getUser()

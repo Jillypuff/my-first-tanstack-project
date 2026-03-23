@@ -2,7 +2,7 @@ import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { changePasswordFormSchema } from "@schemas/user"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 import { logout, useAuthUser } from "@/lib/store"
 import { queryClient } from "@/lib/queryClient"
 import { applicationsQueryKey } from "@/lib/queries/applications"
@@ -32,6 +32,7 @@ function ProfilePage() {
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState("")
   const [deleteAck, setDeleteAck] = useState(false)
+  const [logoutBusy, setLogoutBusy] = useState(false)
 
   const passwordForm = useForm({
     defaultValues: {
@@ -40,6 +41,7 @@ function ProfilePage() {
     },
     onSubmit: async ({ value }) => {
       setPasswordMessage(null)
+      const supabase = await getSupabaseForRequest()
       const { error } = await supabase.auth.updateUser({
         password: value.new_password,
       })
@@ -60,10 +62,23 @@ function ProfilePage() {
     setDashboardDefaultState(value)
   }
 
+  const handleLogout = async () => {
+    setLogoutBusy(true)
+    try {
+      await logout()
+      await queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
+      await queryClient.invalidateQueries({ queryKey: ["user"] })
+      navigate({ to: "/login" })
+    } finally {
+      setLogoutBusy(false)
+    }
+  }
+
   const handleDeleteAccount = async () => {
     setDeleteError(null)
     setDeleteBusy(true)
     try {
+      const supabase = await getSupabaseForRequest()
       const {
         data: { user },
       } = await supabase.auth.getUser()
@@ -148,6 +163,14 @@ function ProfilePage() {
         <h2 className="text-xl font-semibold text-slate-900">Account</h2>
         <p className="mt-1 text-sm text-slate-500">Signed in as</p>
         <p className="mt-1 font-medium text-slate-900">{email ?? "—"}</p>
+        <button
+          type="button"
+          disabled={logoutBusy}
+          onClick={() => void handleLogout()}
+          className="mt-4 h-11 rounded-xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-800 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {logoutBusy ? "Signing out…" : "Log out"}
+        </button>
 
         <div className="mt-8 border-t border-slate-100 pt-8">
           <h3 className="text-lg font-semibold text-slate-900">Change password</h3>

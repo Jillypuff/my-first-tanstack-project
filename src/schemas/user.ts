@@ -36,6 +36,7 @@ export const loginFormSchema = z.object({
     .trim()
     .toLowerCase(),
   password: z.string().min(1, "Password is required"),
+  rememberMe: z.boolean(),
 })
 
 export type LoginInput = z.infer<typeof loginFormSchema>

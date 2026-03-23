@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form"
 import { useState } from "react"
 import { registerFormSchema } from "@schemas/user"
 import { UserCollection } from "@/lib/db"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 import TextInput from "../ui/form/TextInput"
 
 const emptyRegisterValues = {
@@ -20,6 +20,7 @@ const RegisterForm = () => {
     defaultValues: { ...emptyRegisterValues },
     onSubmit: async ({ value, formApi }) => {
       const email = value.email.trim()
+      const supabase = await getSupabaseForRequest()
       const { data, error } = await supabase.auth.signUp({
         email,
         password: value.password,

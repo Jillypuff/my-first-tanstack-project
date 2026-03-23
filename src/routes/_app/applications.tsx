@@ -5,7 +5,7 @@ import ApplicationForm from "@/components/application/ApplicationForm"
 import ApplicationCard from "@/components/application/ApplicationCard"
 import { type ApplicationStatus } from "@/schemas/application"
 import { applicationsQueryOptions } from "@/lib/queries/applications"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 
 export const Route = createFileRoute("/_app/applications")({
   component: ApplicationsPage,
@@ -120,6 +120,7 @@ function ApplicationsPage() {
     const shouldDelete = window.confirm("Delete this application?")
     if (!shouldDelete) return
 
+    const supabase = await getSupabaseForRequest()
     const { error } = await supabase.from("applications").delete().eq("id", applicationId)
     if (error) {
       return
@@ -294,6 +295,7 @@ function ApplicationsPage() {
             onSubmitApplication={async (value) => {
               const scrollYBeforeEdit = scrollYBeforeEditRef.current
               const now = new Date().toISOString()
+              const supabase = await getSupabaseForRequest()
               const { error } = await supabase
                 .from("applications")
                 .update({

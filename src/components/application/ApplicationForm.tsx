@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form"
 import { useMemo, useState } from "react"
 import { ApplicationCollection } from "@/lib/db"
-import { supabase } from "@/lib/supabase"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 import { CompanyInfo } from "./FormFeatures/CompanyInfo"
 import { Contacts } from "./FormFeatures/Contacts"
 import { JobCriterias } from "./FormFeatures/JobCriterias"
@@ -218,6 +218,7 @@ const ApplicationForm = ({
         return
       }
 
+      const supabase = await getSupabaseForRequest()
       const {
         data: { user: authUser },
         error: authError,

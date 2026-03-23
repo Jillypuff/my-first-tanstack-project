@@ -1,7 +1,11 @@
 import { useForm } from "@tanstack/react-form"
 import { loginFormSchema } from "@schemas/user"
 import { useNavigate } from "@tanstack/react-router"
-import { supabase } from "@/lib/supabase"
+import {
+  readStayLoggedInCheckboxDefault,
+  setAuthPersistPreferenceCookie,
+} from "@/lib/auth-persist"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 import TextInput from "../ui/form/TextInput"
 
 const LoginForm = () => {
@@ -11,15 +15,20 @@ const LoginForm = () => {
     defaultValues: {
       email: "",
       password: "",
+      rememberMe: readStayLoggedInCheckboxDefault(),
     },
     onSubmit: async ({ value }) => {
-      console.log(value)
+      setAuthPersistPreferenceCookie(value.rememberMe)
+      const supabase = await getSupabaseForRequest()
       const { error } = await supabase.auth.signInWithPassword({
         email: value.email,
         password: value.password,
       })
 
-      if (error) console.error("LoginForm onSubmit error: ", error)
+      if (error) {
+        console.error("LoginForm onSubmit error: ", error)
+        return
+      }
       navigate({ to: "/" })
     },
     validators: {
@@ -45,6 +54,26 @@ const LoginForm = () => {
           <TextInput field={field} label="Password" type="password" />
         )}
       </Field>
+
+      <Field name="rememberMe">
+        {(field) => (
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              id={field.name}
+              name={field.name}
+              checked={field.state.value}
+              onBlur={field.handleBlur}
+              onChange={(e) => field.handleChange(e.target.checked)}
+              className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            />
+            <span>
+              Stay logged in on this computer
+            </span>
+          </label>
+        )}
+      </Field>
+
       <Subscribe
         selector={(state) => [state.canSubmit, state.isSubmitting]}
         children={([canSubmit, isSubmitting]) => (

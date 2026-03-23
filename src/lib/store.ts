@@ -1,6 +1,7 @@
 import { Store, useStore } from "@tanstack/react-store"
 import type { User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase"
+import { clearAuthPersistPreferenceCookie } from "@/lib/auth-persist"
+import { getSupabaseForRequest } from "@/lib/supabase-request"
 
 export type GlobalAuthState = {
   user: User | null
@@ -25,12 +26,14 @@ export function initAuthStore() {
   if (typeof window === "undefined" || authSyncStarted) return
   authSyncStarted = true
 
-  void supabase.auth.getSession().then(({ data: { session } }) => {
-    applySessionUser(session?.user ?? null)
-  })
+  void getSupabaseForRequest().then((supabase) => {
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      applySessionUser(session?.user ?? null)
+    })
 
-  supabase.auth.onAuthStateChange((_event, session) => {
-    applySessionUser(session?.user ?? null)
+    supabase.auth.onAuthStateChange((_event, session) => {
+      applySessionUser(session?.user ?? null)
+    })
   })
 }
 
@@ -39,5 +42,7 @@ export function useAuthUser() {
 }
 
 export async function logout() {
+  const supabase = await getSupabaseForRequest()
   await supabase.auth.signOut()
+  clearAuthPersistPreferenceCookie()
 }
