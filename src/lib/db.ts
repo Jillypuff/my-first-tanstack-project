@@ -22,7 +22,7 @@ export const UserCollection = createCollection(
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, username, email")
+        .select("id, email")
         .eq("id", authUser.id)
         .single()
 
