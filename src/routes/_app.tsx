@@ -1,8 +1,8 @@
 import { Outlet, createFileRoute, redirect } from "@tanstack/react-router"
 import AppSidebar from "@/components/layout/AppSidebar"
 import { queryClient } from "@/lib/queryClient"
-import { applicationsQueryOptions } from "@/lib/queries/applications"
-import { getAuthSession } from "@/lib/auth-session"
+import { applicationsQueryOptions } from "@/lib/application/applications"
+import { getAuthSession } from "@/lib/auth/auth-session"
 
 export const Route = createFileRoute("/_app")({
   beforeLoad: async () => {

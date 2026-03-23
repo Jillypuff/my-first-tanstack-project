@@ -1,4 +1,5 @@
 import { type KeyboardEvent, useState } from "react"
+import Tag from "@/components/ui/Tag"
 
 interface TagsProps {
   form: any
@@ -69,9 +70,11 @@ export const Tags = ({ form }: TagsProps) => {
                       key={tag}
                       type="button"
                       onClick={() => removeTag(tag)}
-                      className="rounded-full bg-indigo-50 px-3 py-1 text-sm text-indigo-700 transition hover:bg-indigo-100"
+                      className="cursor-pointer border-0 bg-transparent p-0 transition hover:opacity-90"
                     >
-                      {tag} x
+                      <Tag size="lg" className="transition hover:bg-indigo-100">
+                        {tag} x
+                      </Tag>
                     </button>
                   ))}
                 </div>

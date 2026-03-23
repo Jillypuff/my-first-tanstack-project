@@ -1,5 +1,5 @@
 import { ApplicationSchema, type Application } from "@/schemas/application"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 
 export const applicationsQueryKey = ["applications"] as const
 

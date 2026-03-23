@@ -4,8 +4,8 @@ import { useNavigate } from "@tanstack/react-router"
 import {
   readStayLoggedInCheckboxDefault,
   setAuthPersistPreferenceCookie,
-} from "@/lib/auth-persist"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+} from "@/lib/auth/auth-persist"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 import TextInput from "../ui/form/TextInput"
 
 const LoginForm = () => {

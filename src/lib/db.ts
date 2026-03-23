@@ -4,8 +4,8 @@ import { UserSchema, type User } from "../schemas/user"
 import { ApplicationSchema, type Application } from "../schemas/application"
 
 import { queryClient } from "./queryClient"
-import { applicationsQueryKey } from "./queries/applications"
-import { getSupabaseForRequest } from "./supabase-request"
+import { applicationsQueryKey } from "./application/applications"
+import { getSupabaseForRequest } from "./supabase/request"
 
 export const UserCollection = createCollection(
   queryCollectionOptions({

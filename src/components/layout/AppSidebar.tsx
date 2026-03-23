@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router"
-import { useAuthUser } from "@/lib/store"
+import { useAuthUser } from "@/lib/auth/store"
 
 const navItems = [
   { to: "/", label: "Dashboard" },
@@ -29,7 +29,6 @@ const AppSidebar = () => {
       </div>
 
       <nav className="flex-1 px-4 py-6">
-        <p className="mb-3 px-2 text-xs tracking-wide text-slate-500 uppercase">Menu</p>
         <ul className="space-y-1">
           {navItems.map((item) => {
             const isActive =

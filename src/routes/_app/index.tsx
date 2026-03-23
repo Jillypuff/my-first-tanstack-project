@@ -1,45 +1,22 @@
 import { useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
-import { applicationsQueryOptions } from "@/lib/queries/applications"
+import ApplicationStatusBadge from "@/components/application/ApplicationStatusBadge"
+import Card from "@/components/ui/Card"
+import ErrorPanel from "@/components/ui/feedback/ErrorPanel"
+import LoadingPanel from "@/components/ui/feedback/LoadingPanel"
+import NativeSelect from "@/components/ui/NativeSelect"
+import Tag from "@/components/ui/Tag"
+import {
+  APPLICATION_STATUS_ORDER,
+  applicationStatusMeta,
+} from "@/lib/application/application-status"
+import { applicationsQueryOptions } from "@/lib/application/applications"
 import { currentMonthKey, getDashboardTimeDefault } from "@/lib/preferences"
 
 export const Route = createFileRoute("/_app/")({
   component: DashboardPage,
 })
-
-const statusOrder = ["applied", "responded", "interview", "rejected", "ghosted"] as const
-
-const statusMeta: Record<
-  (typeof statusOrder)[number],
-  { label: string; color: string; badge: string }
-> = {
-  applied: {
-    label: "Applied",
-    color: "#3b82f6",
-    badge: "bg-blue-50 text-blue-700 ring-blue-200",
-  },
-  responded: {
-    label: "Responded",
-    color: "#10b981",
-    badge: "bg-emerald-50 text-emerald-700 ring-emerald-200",
-  },
-  interview: {
-    label: "Interview",
-    color: "#8b5cf6",
-    badge: "bg-violet-50 text-violet-700 ring-violet-200",
-  },
-  rejected: {
-    label: "Rejected",
-    color: "#ef4444",
-    badge: "bg-red-50 text-red-700 ring-red-200",
-  },
-  ghosted: {
-    label: "Ghosted",
-    color: "#94a3b8",
-    badge: "bg-slate-100 text-slate-600 ring-slate-200",
-  },
-}
 
 function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(() =>
@@ -108,11 +85,11 @@ function DashboardPage() {
 
   const statusSeries = useMemo(
     () =>
-      statusOrder.map((status) => ({
+      APPLICATION_STATUS_ORDER.map((status) => ({
         status,
-        label: statusMeta[status].label,
+        label: applicationStatusMeta[status].label,
         value: stats[status],
-        color: statusMeta[status].color,
+        chartColor: applicationStatusMeta[status].chartColor,
       })),
     [stats],
   )
@@ -128,7 +105,7 @@ function DashboardPage() {
       const start = current
       const span = (item.value / total) * 360
       current += span
-      return `${item.color} ${start}deg ${current}deg`
+      return `${item.chartColor} ${start}deg ${current}deg`
     })
 
     return `conic-gradient(${segments.join(", ")})`
@@ -159,29 +136,27 @@ function DashboardPage() {
           >
             Time range
           </label>
-          <select
+          <NativeSelect
             id="month-filter"
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
-            className="h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-800 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+            className="h-10 rounded-lg border-slate-300 text-slate-800"
           >
             {monthOptions.map((month) => (
               <option key={month} value={month}>
                 {formatMonth(month)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
-          Loading applications...
-        </div>
+        <LoadingPanel>Loading applications...</LoadingPanel>
       ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">
+        <ErrorPanel>
           {error instanceof Error ? error.message : "Failed to load applications."}
-        </div>
+        </ErrorPanel>
       ) : (
         <>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -193,18 +168,15 @@ function DashboardPage() {
               ["Rejected", stats.rejected],
               ["Ghosted", stats.ghosted],
             ].map(([label, value]) => (
-              <article
-                key={label}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
+              <Card key={label} className="p-5">
                 <p className="text-sm text-slate-500">{label}</p>
                 <p className="mt-2 text-4xl font-semibold text-slate-900">{String(value)}</p>
-              </article>
+              </Card>
             ))}
           </div>
 
           <div className="grid gap-4 xl:grid-cols-3">
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm xl:col-span-2">
+            <Card className="p-6 xl:col-span-2">
               <h2 className="text-2xl font-semibold text-slate-900">Applications per Month</h2>
               <p className="mb-4 text-sm text-slate-500">Total applications sent each month</p>
 
@@ -229,9 +201,9 @@ function DashboardPage() {
                   })}
                 </div>
               )}
-            </section>
+            </Card>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+            <Card className="p-6">
               <h2 className="text-2xl font-semibold text-slate-900">Status Breakdown</h2>
               <p className="mb-4 text-sm text-slate-500">{formatMonth(selectedMonth)}</p>
 
@@ -250,7 +222,7 @@ function DashboardPage() {
                     <div className="flex items-center gap-2">
                       <span
                         className="inline-block h-2.5 w-2.5 rounded-full"
-                        style={{ backgroundColor: item.color }}
+                        style={{ backgroundColor: item.chartColor }}
                       />
                       <span className="text-slate-600">{item.label}</span>
                     </div>
@@ -258,10 +230,10 @@ function DashboardPage() {
                   </div>
                 ))}
               </div>
-            </section>
+            </Card>
           </div>
 
-          <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <Card className="p-6">
             <div className="mb-4 flex items-center justify-between gap-4">
               <h2 className="text-2xl font-semibold text-slate-900">
                 Recent Applications - {formatMonth(selectedMonth)}
@@ -273,7 +245,6 @@ function DashboardPage() {
             ) : (
               <div className="space-y-2">
                 {recentApplications.slice(0, 10).map((application) => {
-                  const badge = statusMeta[application.status].badge
                   const initial = application.company_name.charAt(0).toUpperCase()
                   const tags = application.details.tags.slice(0, 2)
 
@@ -297,25 +268,21 @@ function DashboardPage() {
                           {new Date(application.date_applied).toLocaleDateString()}
                         </span>
                         {tags.map((tag) => (
-                          <span
-                            key={`${application.id}-${tag}`}
-                            className="rounded-full bg-slate-100 px-2.5 py-1 text-xs text-slate-600"
-                          >
+                          <Tag key={`${application.id}-${tag}`} variant="muted" size="md">
                             {tag}
-                          </span>
+                          </Tag>
                         ))}
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${badge}`}
-                        >
-                          {statusMeta[application.status].label}
-                        </span>
+                        <ApplicationStatusBadge
+                          status={application.status}
+                          variant="emphasized"
+                        />
                       </div>
                     </article>
                   )
                 })}
               </div>
             )}
-          </section>
+          </Card>
         </>
       )}
     </section>

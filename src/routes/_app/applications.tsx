@@ -3,35 +3,30 @@ import { createFileRoute, Link } from "@tanstack/react-router"
 import { useQuery } from "@tanstack/react-query"
 import ApplicationForm from "@/components/application/ApplicationForm"
 import ApplicationCard from "@/components/application/ApplicationCard"
+import Card from "@/components/ui/Card"
+import ErrorPanel from "@/components/ui/feedback/ErrorPanel"
+import LoadingPanel from "@/components/ui/feedback/LoadingPanel"
+import NativeSelect from "@/components/ui/NativeSelect"
+import {
+  APPLICATION_STATUS_ORDER,
+  applicationStatusLabels,
+} from "@/lib/application/application-status"
 import { type ApplicationStatus } from "@/schemas/application"
-import { applicationsQueryOptions } from "@/lib/queries/applications"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+import { applicationsQueryOptions } from "@/lib/application/applications"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 
 export const Route = createFileRoute("/_app/applications")({
   component: ApplicationsPage,
 })
 
-const statusOptions: ApplicationStatus[] = [
-  "applied",
-  "responded",
-  "interview",
-  "rejected",
-  "ghosted",
-]
-
-const statusLabel: Record<ApplicationStatus, string> = {
-  applied: "Applied",
-  responded: "Responded",
-  interview: "Interview",
-  rejected: "Rejected",
-  ghosted: "Ghosted",
-}
+const PAGE_SIZE = 20
 
 function ApplicationsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus[]>([])
   const [monthFilter, setMonthFilter] = useState("all")
   const [tagFilter, setTagFilter] = useState<string[]>([])
+  const [page, setPage] = useState(1)
   const [editingApplicationId, setEditingApplicationId] = useState<string | null>(null)
   const [expandedApplicationIds, setExpandedApplicationIds] = useState<Set<string>>(
     () => new Set(),
@@ -86,6 +81,33 @@ function ApplicationsPage() {
     })
   }, [applications, searchTerm, statusFilter, monthFilter, tagFilter])
 
+  const totalFiltered = filteredApplications.length
+  const totalPages = Math.max(1, Math.ceil(totalFiltered / PAGE_SIZE))
+
+  const paginatedApplications = useMemo(
+    () => filteredApplications.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filteredApplications, page],
+  )
+
+  useEffect(() => {
+    setPage(1)
+  }, [searchTerm, statusFilter, monthFilter, tagFilter])
+
+  useEffect(() => {
+    setPage((previous) => Math.min(previous, totalPages))
+  }, [totalPages])
+
+  useEffect(() => {
+    const idsOnPage = new Set(paginatedApplications.map((application) => application.id))
+    setExpandedApplicationIds((previous) => {
+      const next = new Set<string>()
+      for (const id of previous) {
+        if (idsOnPage.has(id)) next.add(id)
+      }
+      return next
+    })
+  }, [paginatedApplications])
+
   const editingApplication = useMemo(
     () => applications.find((application) => application.id === editingApplicationId) ?? null,
     [applications, editingApplicationId],
@@ -128,11 +150,16 @@ function ApplicationsPage() {
     await refetch()
   }
 
+  const scrollToPositionBeforeEdit = (savedY: number | null) => {
+    if (typeof window !== "undefined" && typeof savedY === "number") {
+      window.scrollTo({ top: savedY, behavior: "smooth" })
+    }
+  }
+
   useEffect(() => {
     if (!editingApplicationId) return
     if (!editFormSectionRef.current) return
 
-    // Scroll the newly opened edit form into view.
     editFormSectionRef.current.scrollIntoView({ behavior: "smooth", block: "start" })
   }, [editingApplicationId])
 
@@ -153,7 +180,7 @@ function ApplicationsPage() {
         </Link>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <Card className="p-5">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <input
             type="text"
@@ -163,41 +190,35 @@ function ApplicationsPage() {
             className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
           />
 
-          <select
+          <NativeSelect
             value={statusFilter.join(",")}
             onChange={(event) => {
               const value = event.target.value
               setStatusFilter(value ? (value.split(",") as ApplicationStatus[]) : [])
             }}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
           >
             <option value="">All status</option>
-            {statusOptions.map((status) => (
+            {APPLICATION_STATUS_ORDER.map((status) => (
               <option key={status} value={status}>
-                {statusLabel[status]}
+                {applicationStatusLabels[status]}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
-          <select
-            value={monthFilter}
-            onChange={(event) => setMonthFilter(event.target.value)}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
-          >
+          <NativeSelect value={monthFilter} onChange={(event) => setMonthFilter(event.target.value)}>
             {monthOptions.map((month) => (
               <option key={month} value={month}>
                 {formatMonth(month)}
               </option>
             ))}
-          </select>
+          </NativeSelect>
 
-          <select
+          <NativeSelect
             value={tagFilter[0] ?? ""}
             onChange={(event) => {
               const nextTag = event.target.value
               setTagFilter(nextTag ? [nextTag] : [])
             }}
-            className="h-11 rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
           >
             <option value="">All tags</option>
             {availableTags.map((tag) => (
@@ -205,7 +226,7 @@ function ApplicationsPage() {
                 {tag}
               </option>
             ))}
-          </select>
+          </NativeSelect>
         </div>
 
         {(searchTerm || statusFilter.length || monthFilter !== "all" || tagFilter.length) && (
@@ -219,18 +240,16 @@ function ApplicationsPage() {
             </button>
           </div>
         )}
-      </div>
+      </Card>
 
       {isLoading ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600 shadow-sm">
-          Loading applications...
-        </div>
+        <LoadingPanel>Loading applications...</LoadingPanel>
       ) : error ? (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700 shadow-sm">
+        <ErrorPanel>
           {error instanceof Error ? error.message : "Failed to load applications."}
-        </div>
+        </ErrorPanel>
       ) : filteredApplications.length === 0 ? (
-        <div className="rounded-2xl border border-slate-200 bg-white p-12 text-center shadow-sm">
+        <Card className="p-12 text-center">
           <p className="text-lg font-semibold text-slate-800">No applications match your filters</p>
           <p className="mt-1 text-slate-500">Try adjusting search or filter values.</p>
           <button
@@ -240,84 +259,149 @@ function ApplicationsPage() {
           >
             Clear filters
           </button>
-        </div>
+        </Card>
       ) : (
-        <div className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-          {filteredApplications.map((application) => (
-            <ApplicationCard
-              key={application.id}
-              application={application}
-              expanded={expandedApplicationIds.has(application.id)}
-              onToggleExpand={() => toggleApplicationExpanded(application.id)}
-              statusLabel={statusLabel}
-              onEdit={() => {
-                scrollYBeforeEditRef.current =
-                  typeof window !== "undefined" ? window.scrollY : null
-                setEditingApplicationId(application.id)
-              }}
-              onDelete={() => onDelete(application.id)}
-            />
-          ))}
+        <div className="space-y-3">
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <div className="flex items-stretch gap-2 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-0">
+              <div className="flex min-w-0 flex-1 items-center gap-3 px-4 py-2.5">
+                <div className="h-5 w-5 shrink-0" />
+                <div className="grid min-w-0 flex-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 lg:items-center lg:gap-4">
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Company
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Job title
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Status
+                  </span>
+                  <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                    Tags
+                  </span>
+                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-2 border-l border-slate-200 bg-slate-50/50 px-3 py-2.5">
+                <span className="min-w-[3.25rem] text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Refine
+                </span>
+                <span className="min-w-[3.25rem] text-center text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  Retire
+                </span>
+              </div>
+            </div>
+            <div className="divide-y divide-slate-200">
+            {paginatedApplications.map((application) => (
+              <ApplicationCard
+                key={application.id}
+                application={application}
+                expanded={expandedApplicationIds.has(application.id)}
+                onToggleExpand={() => toggleApplicationExpanded(application.id)}
+                onEdit={() => {
+                  scrollYBeforeEditRef.current =
+                    typeof window !== "undefined" ? window.scrollY : null
+                  setEditingApplicationId(application.id)
+                }}
+                onDelete={() => onDelete(application.id)}
+              />
+            ))}
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <Card className="flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-slate-600">
+                Showing {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, totalFiltered)} of{" "}
+                {totalFiltered}
+              </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-slate-500">
+                  Page {page} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  disabled={page <= 1}
+                  onClick={() => setPage((previous) => Math.max(1, previous - 1))}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Previous
+                </button>
+                <button
+                  type="button"
+                  disabled={page >= totalPages}
+                  onClick={() => setPage((previous) => Math.min(totalPages, previous + 1))}
+                  className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 disabled:pointer-events-none disabled:opacity-40"
+                >
+                  Next
+                </button>
+              </div>
+            </Card>
+          )}
         </div>
       )}
 
       {editingApplication && (
-        <section
-          ref={editFormSectionRef}
-          className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-        >
-          <h2 className="text-2xl font-semibold text-slate-900">Edit Application</h2>
-          <p className="mb-4 text-sm text-slate-500">
-            Update details for {editingApplication.company_name}.
-          </p>
+        <section ref={editFormSectionRef}>
+          <Card className="p-6">
+            <h2 className="text-2xl font-semibold text-slate-900">Edit Application</h2>
+            <p className="mb-4 text-sm text-slate-500">
+              Update details for {editingApplication.company_name}.
+            </p>
 
-          <ApplicationForm
-            mode="edit"
-            submitLabel="Save Changes"
-            initialValues={{
-              company_name: editingApplication.company_name,
-              job_title: editingApplication.job_title,
-              date_applied: editingApplication.date_applied,
-              status: editingApplication.status,
-              details: {
-                contacts: editingApplication.details.contacts[0] ?? {
-                  name: "",
-                  email: "",
-                  phone: "",
-                  note: "",
+            <ApplicationForm
+              mode="edit"
+              submitLabel="Save Changes"
+              initialValues={{
+                company_name: editingApplication.company_name,
+                job_title: editingApplication.job_title,
+                date_applied: editingApplication.date_applied,
+                status: editingApplication.status,
+                details: {
+                  contacts: editingApplication.details.contacts[0] ?? {
+                    name: "",
+                    email: "",
+                    phone: "",
+                    note: "",
+                  },
+                  tags: editingApplication.details.tags,
+                  job_criterias: editingApplication.details.job_criterias,
+                  company: editingApplication.details.company,
                 },
-                tags: editingApplication.details.tags,
-                job_criterias: editingApplication.details.job_criterias,
-                company: editingApplication.details.company,
-              },
-            }}
-            onCancel={() => setEditingApplicationId(null)}
-            onSubmitApplication={async (value) => {
-              const scrollYBeforeEdit = scrollYBeforeEditRef.current
-              const now = new Date().toISOString()
-              const supabase = await getSupabaseForRequest()
-              const { error } = await supabase
-                .from("applications")
-                .update({
-                  company_name: value.company_name,
-                  job_title: value.job_title,
-                  date_applied: value.date_applied,
-                  status: value.status,
-                  details: value.details,
-                  updated_at: now,
-                  last_activity_at: now,
+              }}
+              onCancel={() => {
+                const scrollYBeforeEdit = scrollYBeforeEditRef.current
+                setEditingApplicationId(null)
+                requestAnimationFrame(() => {
+                  requestAnimationFrame(() => {
+                    scrollToPositionBeforeEdit(scrollYBeforeEdit)
+                  })
                 })
-                .eq("id", editingApplication.id)
+              }}
+              onSubmitApplication={async (value) => {
+                const scrollYBeforeEdit = scrollYBeforeEditRef.current
+                const now = new Date().toISOString()
+                const supabase = await getSupabaseForRequest()
+                const { error } = await supabase
+                  .from("applications")
+                  .update({
+                    company_name: value.company_name,
+                    job_title: value.job_title,
+                    date_applied: value.date_applied,
+                    status: value.status,
+                    details: value.details,
+                    updated_at: now,
+                    last_activity_at: now,
+                  })
+                  .eq("id", editingApplication.id)
 
-              if (error) throw error
-              setEditingApplicationId(null)
-              await refetch()
+                if (error) throw error
+                setEditingApplicationId(null)
+                await refetch()
 
-              if (typeof window !== "undefined" && typeof scrollYBeforeEdit === "number") {
-                window.scrollTo({ top: scrollYBeforeEdit, behavior: "smooth" })
-              }
-            }}
-          />
+                scrollToPositionBeforeEdit(scrollYBeforeEdit)
+              }}
+            />
+          </Card>
         </section>
       )}
     </section>

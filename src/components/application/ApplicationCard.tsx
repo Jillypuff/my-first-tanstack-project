@@ -1,11 +1,13 @@
 import { ChevronDown } from "lucide-react"
-import type { Application, ApplicationStatus } from "@/schemas/application"
+import ApplicationStatusBadge from "@/components/application/ApplicationStatusBadge"
+import SectionLabel from "@/components/ui/SectionLabel"
+import Tag from "@/components/ui/Tag"
+import type { Application } from "@/schemas/application"
 
 type ApplicationCardProps = {
   application: Application
   expanded: boolean
   onToggleExpand: () => void
-  statusLabel: Record<ApplicationStatus, string>
   onEdit: () => void
   onDelete: () => void
 }
@@ -22,7 +24,6 @@ export default function ApplicationCard({
   application,
   expanded,
   onToggleExpand,
-  statusLabel,
   onEdit,
   onDelete,
 }: ApplicationCardProps) {
@@ -54,9 +55,7 @@ export default function ApplicationCard({
               <p className="truncate text-sm text-slate-700">{application.job_title}</p>
             </div>
             <div>
-              <span className="inline-flex rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium capitalize text-slate-700">
-                {application.status}
-              </span>
+              <ApplicationStatusBadge status={application.status} />
             </div>
             <div className="min-w-0 lg:col-span-1">
               <div className="flex flex-wrap gap-1.5">
@@ -65,12 +64,9 @@ export default function ApplicationCard({
                 ) : (
                   <>
                     {tagsPreview.map((tag) => (
-                      <span
-                        key={`${application.id}-${tag}`}
-                        className="rounded-full bg-indigo-50 px-2 py-0.5 text-xs text-indigo-700"
-                      >
+                      <Tag key={`${application.id}-${tag}`} size="sm">
                         {tag}
-                      </span>
+                      </Tag>
                     ))}
                     {hasMoreTags && (
                       <span className="text-xs text-slate-500">+{details.tags.length - 3}</span>
@@ -110,13 +106,13 @@ export default function ApplicationCard({
           <div className="grid gap-6 lg:grid-cols-2">
             <div className="space-y-4">
               <div>
-                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Application
-                </h3>
+                <SectionLabel>Application</SectionLabel>
                 <dl className="mt-2 space-y-1 text-slate-700">
                   <div className="flex gap-2">
                     <dt className="w-28 shrink-0 text-slate-500">Status</dt>
-                    <dd>{statusLabel[application.status]}</dd>
+                    <dd>
+                      <ApplicationStatusBadge status={application.status} />
+                    </dd>
                   </div>
                   <div className="flex gap-2">
                     <dt className="w-28 shrink-0 text-slate-500">Date applied</dt>
@@ -127,15 +123,10 @@ export default function ApplicationCard({
 
               {details.tags.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tags</h3>
+                  <SectionLabel>Tags</SectionLabel>
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     {details.tags.map((tag) => (
-                      <span
-                        key={`${application.id}-full-${tag}`}
-                        className="rounded-full bg-indigo-50 px-2.5 py-1 text-xs text-indigo-700"
-                      >
-                        {tag}
-                      </span>
+                      <Tag key={`${application.id}-full-${tag}`}>{tag}</Tag>
                     ))}
                   </div>
                 </div>
@@ -143,9 +134,7 @@ export default function ApplicationCard({
 
               {(details.company.info || details.company.location || details.company.homepage) && (
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Company
-                  </h3>
+                  <SectionLabel>Company</SectionLabel>
                   <dl className="mt-2 space-y-2 text-slate-700">
                     {details.company.location ? (
                       <div>
@@ -186,9 +175,7 @@ export default function ApplicationCard({
             <div className="space-y-4">
               {visibleContacts.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Contacts
-                  </h3>
+                  <SectionLabel>Contacts</SectionLabel>
                   <ul className="mt-2 space-y-3">
                     {visibleContacts.map((contact, index) => (
                       <li
@@ -230,9 +217,7 @@ export default function ApplicationCard({
 
               {details.job_criterias.length > 0 && (
                 <div>
-                  <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                    Job criteria
-                  </h3>
+                  <SectionLabel>Job criteria</SectionLabel>
                   <ul className="mt-2 space-y-2">
                     {details.job_criterias.map((criteria, index) => (
                       <li

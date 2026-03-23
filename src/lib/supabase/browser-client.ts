@@ -3,7 +3,7 @@ import { parse, serialize } from "cookie"
 import {
   mergePersistIntoSupabaseCookieOptions,
   readPersistFromDocumentCookie,
-} from "@/lib/auth-persist"
+} from "@/lib/auth/auth-persist"
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
 const supabaseKey = import.meta.env.VITE_SUPABASE_KEY as string

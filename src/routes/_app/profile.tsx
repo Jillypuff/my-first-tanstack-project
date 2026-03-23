@@ -2,10 +2,10 @@ import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { createFileRoute, useNavigate } from "@tanstack/react-router"
 import { changePasswordFormSchema } from "@schemas/user"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
-import { logout, useAuthUser } from "@/lib/store"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
+import { logout, useAuthUser } from "@/lib/auth/store"
 import { queryClient } from "@/lib/queryClient"
-import { applicationsQueryKey } from "@/lib/queries/applications"
+import { applicationsQueryKey } from "@/lib/application/applications"
 import {
   getDashboardTimeDefault,
   setDashboardTimeDefault,

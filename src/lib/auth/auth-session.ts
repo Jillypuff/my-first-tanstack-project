@@ -1,5 +1,5 @@
 import type { Session } from "@supabase/supabase-js"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 
 /**
  * Session for route guards. Uses cookie-backed SSR on the server so refresh keeps you signed in.

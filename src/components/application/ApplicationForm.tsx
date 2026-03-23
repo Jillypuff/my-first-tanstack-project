@@ -1,7 +1,7 @@
 import { useForm } from "@tanstack/react-form"
 import { useMemo, useState } from "react"
 import { ApplicationCollection } from "@/lib/db"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 import { CompanyInfo } from "./FormFeatures/CompanyInfo"
 import { Contacts } from "./FormFeatures/Contacts"
 import { JobCriterias } from "./FormFeatures/JobCriterias"
@@ -11,7 +11,10 @@ import {
   type ApplicationStatus,
   type ApplicationFeatureId,
 } from "@schemas/application"
+import Card from "../ui/Card"
+import NativeSelect from "../ui/NativeSelect"
 import TextInput from "../ui/form/TextInput"
+import { APPLICATION_STATUS_ORDER, applicationStatusMeta } from "@/lib/application/application-status"
 
 type FeatureId = ApplicationFeatureId
 type FormContact = {
@@ -302,7 +305,7 @@ const ApplicationForm = ({
             {saveFeedback}
           </div>
         )}
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <Card className="p-6">
           <h2 className="mb-5 text-2xl font-semibold text-slate-800">
             Application Details
           </h2>
@@ -363,23 +366,23 @@ const ApplicationForm = ({
                   >
                     Status *
                   </label>
-                  <select
+                  <NativeSelect
                     id={field.name}
                     value={field.state.value}
                     onChange={(e) => field.handleChange(e.target.value as ApplicationStatus)}
-                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                    sizeVariant="form"
                   >
-                    <option value="applied">Applied</option>
-                    <option value="responded">Responded</option>
-                    <option value="interview">Interview</option>
-                    <option value="rejected">Rejected</option>
-                    <option value="ghosted">Ghosted</option>
-                  </select>
+                    {APPLICATION_STATUS_ORDER.map((status) => (
+                      <option key={status} value={status}>
+                        {applicationStatusMeta[status].label}
+                      </option>
+                    ))}
+                  </NativeSelect>
                 </div>
               )}
             </Field>
           </div>
-        </section>
+        </Card>
 
         {activeFeatures.length > 0 && (
           <section className="space-y-4">
@@ -387,10 +390,7 @@ const ApplicationForm = ({
               const FeatureComponent = feature.Component
 
               return (
-                <div
-                  key={feature.id}
-                  className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm"
-                >
+                <Card key={feature.id} className="p-6">
                   <div className="mb-4 flex items-start justify-between">
                     <div>
                       <h2 className="text-3xl font-semibold text-slate-800">
@@ -406,7 +406,7 @@ const ApplicationForm = ({
                     </button>
                   </div>
                   <FeatureComponent form={{ Field }} />
-                </div>
+                </Card>
               )
             })}
           </section>
@@ -427,7 +427,7 @@ const ApplicationForm = ({
               All available detail sections are already added.
             </p>
           ) : isFeaturePickerOpen ? (
-            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <Card className="p-5">
               <p className="mb-4 text-xs font-semibold tracking-wide text-slate-400 uppercase">
                 Additional Information
               </p>
@@ -444,7 +444,7 @@ const ApplicationForm = ({
                   </button>
                 ))}
               </div>
-            </div>
+            </Card>
           ) : (
             <></>
           )}

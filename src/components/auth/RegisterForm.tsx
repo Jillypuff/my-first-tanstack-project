@@ -2,7 +2,7 @@ import { useForm } from "@tanstack/react-form"
 import { useState } from "react"
 import { registerFormSchema } from "@schemas/user"
 import { UserCollection } from "@/lib/db"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 import TextInput from "../ui/form/TextInput"
 
 const emptyRegisterValues = {

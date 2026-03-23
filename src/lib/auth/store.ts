@@ -1,7 +1,7 @@
 import { Store, useStore } from "@tanstack/react-store"
 import type { User } from "@supabase/supabase-js"
-import { clearAuthPersistPreferenceCookie } from "@/lib/auth-persist"
-import { getSupabaseForRequest } from "@/lib/supabase-request"
+import { clearAuthPersistPreferenceCookie } from "@/lib/auth/auth-persist"
+import { getSupabaseForRequest } from "@/lib/supabase/request"
 
 export type GlobalAuthState = {
   user: User | null

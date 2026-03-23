@@ -1,5 +1,5 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router"
-import { getAuthSession } from "@/lib/auth-session"
+import { getAuthSession } from "@/lib/auth/auth-session"
 
 export const Route = createFileRoute("/_auth")({
   beforeLoad: async () => {
