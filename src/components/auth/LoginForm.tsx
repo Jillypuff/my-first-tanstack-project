@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
 import { loginFormSchema } from "@schemas/user"
 import { useNavigate } from "@tanstack/react-router"
@@ -8,8 +9,11 @@ import {
 import { getSupabaseForRequest } from "@/lib/supabase/request"
 import TextInput from "../ui/form/TextInput"
 
+const LOGIN_FAILED_MESSAGE = "Email or password was incorrect."
+
 const LoginForm = () => {
   const navigate = useNavigate()
+  const [loginError, setLoginError] = useState<string | null>(null)
 
   const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: {
@@ -18,6 +22,7 @@ const LoginForm = () => {
       rememberMe: readStayLoggedInCheckboxDefault(),
     },
     onSubmit: async ({ value }) => {
+      setLoginError(null)
       setAuthPersistPreferenceCookie(value.rememberMe)
       const supabase = await getSupabaseForRequest()
       const { error } = await supabase.auth.signInWithPassword({
@@ -27,6 +32,7 @@ const LoginForm = () => {
 
       if (error) {
         console.error("LoginForm onSubmit error: ", error)
+        setLoginError(LOGIN_FAILED_MESSAGE)
         return
       }
       navigate({ to: "/" })
@@ -73,6 +79,12 @@ const LoginForm = () => {
           </label>
         )}
       </Field>
+
+      {loginError && (
+        <p className="text-sm text-red-600" role="alert">
+          {loginError}
+        </p>
+      )}
 
       <Subscribe
         selector={(state) => [state.canSubmit, state.isSubmitting]}

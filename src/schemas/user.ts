@@ -43,6 +43,7 @@ export type LoginInput = z.infer<typeof loginFormSchema>
 
 export const changePasswordFormSchema = z
   .object({
+    current_password: z.string().min(1, "Current password is required"),
     new_password: strongPassword,
     confirm_password: z.string(),
   })

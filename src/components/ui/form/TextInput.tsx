@@ -3,6 +3,7 @@ interface TextInputProps {
   label: string
   type: "text" | "password"
   placeholder?: string
+  autoComplete?: string
   wrapperClassName?: string
   labelClassName?: string
   inputClassName?: string
@@ -13,6 +14,7 @@ const TextInput = ({
   label,
   type,
   placeholder,
+  autoComplete,
   wrapperClassName = "",
   labelClassName = "",
   inputClassName = "",
@@ -33,6 +35,7 @@ const TextInput = ({
         name={field.name}
         type={type}
         placeholder={placeholder}
+        autoComplete={autoComplete}
         value={field.state.value}
         onChange={(e) => field.handleChange(e.target.value)}
       />

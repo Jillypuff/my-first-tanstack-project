@@ -36,12 +36,31 @@ function ProfilePage() {
 
   const passwordForm = useForm({
     defaultValues: {
+      current_password: "",
       new_password: "",
       confirm_password: "",
     },
     onSubmit: async ({ value }) => {
       setPasswordMessage(null)
       const supabase = await getSupabaseForRequest()
+      if (!email) {
+        const msg = "Could not verify your account email."
+        setPasswordMessage({ type: "error", text: msg })
+        throw new Error(msg)
+      }
+      const { error: verifyError } = await supabase.auth.signInWithPassword({
+        email,
+        password: value.current_password,
+      })
+      if (verifyError) {
+        const text =
+          verifyError.message.toLowerCase().includes("invalid") ||
+          verifyError.message.toLowerCase().includes("credential")
+            ? "Current password is incorrect."
+            : verifyError.message
+        setPasswordMessage({ type: "error", text })
+        throw verifyError
+      }
       const { error } = await supabase.auth.updateUser({
         password: value.new_password,
       })
@@ -175,7 +194,8 @@ function ProfilePage() {
         <div className="mt-8 border-t border-slate-100 pt-8">
           <h3 className="text-lg font-semibold text-slate-900">Change password</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Use a strong password you do not reuse elsewhere.
+            Enter your current password, then choose a new one. Use a strong password you do not
+            reuse elsewhere.
           </p>
           <form
             className="mt-4 max-w-md space-y-4"
@@ -184,6 +204,16 @@ function ProfilePage() {
               passwordForm.handleSubmit()
             }}
           >
+            <passwordForm.Field name="current_password">
+              {(field) => (
+                <TextInput
+                  field={field}
+                  label="Current password"
+                  type="password"
+                  autoComplete="current-password"
+                />
+              )}
+            </passwordForm.Field>
             <passwordForm.Field name="new_password">
               {(field) => (
                 <TextInput field={field} label="New password" type="password" />
