@@ -34,6 +34,7 @@ type FormValues = {
   date_applied: string
   status: ApplicationStatus
   details: {
+    notes: string
     contacts: FormContact
     tags: string[]
     job_criterias: Array<{ title: string; track: boolean }>
@@ -47,6 +48,7 @@ type NormalizedApplicationInput = {
   date_applied: string
   status: ApplicationStatus
   details: {
+    notes: string
     contacts: FormContact[]
     tags: string[]
     job_criterias: Array<{ title: string; track: boolean }>
@@ -95,6 +97,7 @@ const defaultValues: FormValues = {
   date_applied: new Date().toISOString().split("T")[0],
   status: "applied",
   details: {
+    notes: "",
     contacts: {
       name: "",
       email: "",
@@ -185,6 +188,7 @@ const ApplicationForm = ({
         date_applied: value.date_applied,
         status: value.status,
         details: {
+          notes: value.details.notes,
           contacts: hasContactValue ? [contact] : [],
           tags: value.details.tags,
           job_criterias: value.details.job_criterias,
@@ -209,6 +213,7 @@ const ApplicationForm = ({
               ...defaultValues,
               date_applied: new Date().toISOString().split("T")[0],
               details: {
+                notes: "",
                 contacts: { ...defaultValues.details.contacts },
                 tags: [],
                 job_criterias: [],
@@ -251,6 +256,7 @@ const ApplicationForm = ({
             ...defaultValues,
             date_applied: new Date().toISOString().split("T")[0],
             details: {
+              notes: "",
               contacts: { ...defaultValues.details.contacts },
               tags: [],
               job_criterias: [],
@@ -378,6 +384,40 @@ const ApplicationForm = ({
                       </option>
                     ))}
                   </NativeSelect>
+                </div>
+              )}
+            </Field>
+
+            <Field name="details.notes">
+              {(field) => (
+                <div className="space-y-2">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <label
+                      htmlFor={field.name}
+                      className="block text-sm font-medium text-slate-700"
+                    >
+                      Notes{" "}
+                      <span className="font-normal text-slate-500">(optional)</span>
+                    </label>
+                    <span className="text-xs text-slate-400">
+                      {field.state.value.length}/2000
+                    </span>
+                  </div>
+                  <textarea
+                    id={field.name}
+                    name={field.name}
+                    rows={4}
+                    maxLength={2000}
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    placeholder="Interview prep, follow-ups, salary range, etc."
+                    className="min-h-[100px] w-full resize-y rounded-xl border border-slate-200 bg-white px-4 py-3 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100"
+                  />
+                  {field.state.meta.errors && (
+                    <em className="text-xs text-red-500">
+                      {field.state.meta.errors.join(",")}
+                    </em>
+                  )}
                 </div>
               )}
             </Field>

@@ -357,6 +357,7 @@ function ApplicationsPage() {
                 date_applied: editingApplication.date_applied,
                 status: editingApplication.status,
                 details: {
+                  notes: editingApplication.details.notes ?? "",
                   contacts: editingApplication.details.contacts[0] ?? {
                     name: "",
                     email: "",

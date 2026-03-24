@@ -12,6 +12,7 @@ import {
   type DashboardTimeDefault,
 } from "@/lib/preferences"
 import TextInput from "@/components/ui/form/TextInput"
+import { Check, LayoutGrid, Settings, TrendingUp } from "lucide-react"
 
 export const Route = createFileRoute("/_app/profile")({
   component: ProfilePage,
@@ -138,44 +139,70 @@ function ProfilePage() {
         <p className="mt-1 text-slate-600">Account and dashboard preferences.</p>
       </div>
 
-      <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-        <h2 className="text-xl font-semibold text-slate-900">Dashboard</h2>
-        <p className="mt-1 text-sm text-slate-500">
-          Choose the default time range when you open the dashboard.
-        </p>
-        <fieldset className="mt-4 space-y-3">
-          <legend className="sr-only">Default dashboard period</legend>
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 has-[:checked]:border-indigo-300 has-[:checked]:bg-indigo-50/40">
-            <input
-              type="radio"
-              name="dashboard-default"
-              className="mt-1"
-              checked={dashboardDefault === "all"}
-              onChange={() => handleDashboardDefaultChange("all")}
-            />
-            <span>
-              <span className="font-medium text-slate-900">All time</span>
-              <span className="mt-0.5 block text-sm text-slate-500">
-                Show stats and lists across every application you have recorded.
-              </span>
-            </span>
-          </label>
-          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 p-4 has-[:checked]:border-indigo-300 has-[:checked]:bg-indigo-50/40">
-            <input
-              type="radio"
-              name="dashboard-default"
-              className="mt-1"
-              checked={dashboardDefault === "current_month"}
-              onChange={() => handleDashboardDefaultChange("current_month")}
-            />
-            <span>
-              <span className="font-medium text-slate-900">Current month</span>
-              <span className="mt-0.5 block text-sm text-slate-500">
-                Default to this calendar month (you can still switch in the dashboard).
-              </span>
-            </span>
-          </label>
-        </fieldset>
+      <div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2.5">
+          <Settings className="size-5 shrink-0 text-slate-400" strokeWidth={1.5} aria-hidden />
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900">Preferences</h2>
+        </div>
+        <div className="mt-5">
+          <h3 className="text-sm font-semibold text-slate-800">Default dashboard view</h3>
+          <p className="mt-1 text-sm leading-relaxed text-slate-500">
+            Choose what time period to show by default when opening the dashboard.
+          </p>
+          <fieldset className="mt-1">
+            <legend className="sr-only">Default dashboard period</legend>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <label
+                className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  dashboardDefault === "all"
+                    ? "border-indigo-400 bg-indigo-50/90 text-indigo-950"
+                    : "border-slate-200 bg-white text-slate-800 hover:border-slate-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="dashboard-default"
+                  className="sr-only"
+                  checked={dashboardDefault === "all"}
+                  onChange={() => handleDashboardDefaultChange("all")}
+                />
+                <LayoutGrid
+                  className={`size-4 shrink-0 ${dashboardDefault === "all" ? "text-indigo-600" : "text-slate-500"}`}
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+                <span className="whitespace-nowrap">All Time</span>
+                {dashboardDefault === "all" ? (
+                  <Check className="size-3.5 shrink-0 text-indigo-600" strokeWidth={2.5} aria-hidden />
+                ) : null}
+              </label>
+              <label
+                className={`inline-flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition ${
+                  dashboardDefault === "current_month"
+                    ? "border-indigo-400 bg-indigo-50/90 text-indigo-950"
+                    : "border-slate-200 bg-white text-slate-800 hover:border-slate-300"
+                }`}
+              >
+                <input
+                  type="radio"
+                  name="dashboard-default"
+                  className="sr-only"
+                  checked={dashboardDefault === "current_month"}
+                  onChange={() => handleDashboardDefaultChange("current_month")}
+                />
+                <TrendingUp
+                  className={`size-4 shrink-0 ${dashboardDefault === "current_month" ? "text-indigo-600" : "text-slate-500"}`}
+                  strokeWidth={1.75}
+                  aria-hidden
+                />
+                <span className="whitespace-nowrap">Current Month</span>
+                {dashboardDefault === "current_month" ? (
+                  <Check className="size-3.5 shrink-0 text-indigo-600" strokeWidth={2.5} aria-hidden />
+                ) : null}
+              </label>
+            </div>
+          </fieldset>
+        </div>
       </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -194,8 +221,7 @@ function ProfilePage() {
         <div className="mt-8 border-t border-slate-100 pt-8">
           <h3 className="text-lg font-semibold text-slate-900">Change password</h3>
           <p className="mt-1 text-sm text-slate-500">
-            Enter your current password, then choose a new one. Use a strong password you do not
-            reuse elsewhere.
+            Use a strong password you do not reuse elsewhere.
           </p>
           <form
             className="mt-4 max-w-md space-y-4"

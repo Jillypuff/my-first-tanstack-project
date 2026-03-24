@@ -121,6 +121,15 @@ export default function ApplicationCard({
                 </dl>
               </div>
 
+              {details.notes.trim() ? (
+                <div>
+                  <SectionLabel>Notes</SectionLabel>
+                  <p className="mt-2 max-h-48 overflow-y-auto whitespace-pre-wrap text-slate-700">
+                    {details.notes}
+                  </p>
+                </div>
+              ) : null}
+
               {details.tags.length > 0 && (
                 <div>
                   <SectionLabel>Tags</SectionLabel>

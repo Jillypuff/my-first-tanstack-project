@@ -68,10 +68,15 @@ const companyEnabledSchema = z.object({
     ),
 })
 
+const applicationNotesSchema = z
+  .string()
+  .max(2000, "Notes must be at most 2000 characters")
+
 const buildDetailsSchema = (enabled: ApplicationFeatureId[]) => {
   const hasFeature = (feature: ApplicationFeatureId) => enabled.includes(feature)
 
   return z.object({
+    notes: applicationNotesSchema,
     contacts: hasFeature("contacts") ? contactsEnabledSchema : contactsRelaxedSchema,
     tags: hasFeature("tags") ? tagsEnabledSchema : tagsRelaxedSchema,
     job_criterias: hasFeature("job_criterias")
@@ -105,6 +110,7 @@ const applicationCompanySchema = z.object({
 })
 
 const applicationDetailsSchema = z.object({
+  notes: z.string().max(2000).default(""),
   contacts: z.array(applicationContactSchema).default([]),
   tags: z.array(z.string()).max(5).default([]),
   job_criterias: z
