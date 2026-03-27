@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useForm } from "@tanstack/react-form"
+import { Loader2 } from "lucide-react"
 import { loginFormSchema } from "@schemas/user"
 import { useNavigate } from "@tanstack/react-router"
 import {
@@ -14,6 +15,7 @@ const LOGIN_FAILED_MESSAGE = "Email or password was incorrect."
 const LoginForm = () => {
   const navigate = useNavigate()
   const [loginError, setLoginError] = useState<string | null>(null)
+  const [isPreloadingDashboard, setIsPreloadingDashboard] = useState(false)
 
   const { Field, handleSubmit, Subscribe } = useForm({
     defaultValues: {
@@ -35,7 +37,14 @@ const LoginForm = () => {
         setLoginError(LOGIN_FAILED_MESSAGE)
         return
       }
-      navigate({ to: "/" })
+      setIsPreloadingDashboard(true)
+      try {
+        await navigate({ to: "/" })
+      } catch (err) {
+        console.error("LoginForm navigate error:", err)
+        setIsPreloadingDashboard(false)
+        setLoginError("Could not load the app. Please try again.")
+      }
     },
     validators: {
       onSubmit: loginFormSchema,
@@ -43,62 +52,98 @@ const LoginForm = () => {
   })
 
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault()
-        e.stopPropagation()
-        handleSubmit()
-      }}
-      className="space-y-4"
-    >
-      <Field name="email">
-        {(field) => <TextInput field={field} label="Email" type="text" />}
-      </Field>
-
-      <Field name="password">
-        {(field) => (
-          <TextInput field={field} label="Password" type="password" />
-        )}
-      </Field>
-
-      <Field name="rememberMe">
-        {(field) => (
-          <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              id={field.name}
-              name={field.name}
-              checked={field.state.value}
-              onBlur={field.handleBlur}
-              onChange={(e) => field.handleChange(e.target.checked)}
-              className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-            />
-            <span>
-              Stay logged in on this computer
-            </span>
-          </label>
-        )}
-      </Field>
-
-      {loginError && (
-        <p className="text-sm text-red-600" role="alert">
-          {loginError}
-        </p>
-      )}
-
-      <Subscribe
-        selector={(state) => [state.canSubmit, state.isSubmitting]}
-        children={([canSubmit, isSubmitting]) => (
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="mt-2 h-12 w-full rounded-xl bg-indigo-600 px-4 font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+    <Subscribe
+      selector={(state) => [state.canSubmit, state.isSubmitting]}
+      children={([canSubmit, isSubmitting]) => {
+        const buttonLabel =
+          isPreloadingDashboard
+            ? "Loading your dashboard…"
+            : isSubmitting
+              ? "Signing in…"
+              : "Login"
+        return (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleSubmit()
+            }}
+            aria-busy={isSubmitting}
+            className="space-y-4"
           >
-            {isSubmitting ? "Logging in..." : "Login"}
-          </button>
-        )}
-      />
-    </form>
+            <Field name="email">
+              {(field) => (
+                <TextInput
+                  field={field}
+                  label="Email"
+                  type="text"
+                  disabled={isSubmitting}
+                />
+              )}
+            </Field>
+
+            <Field name="password">
+              {(field) => (
+                <TextInput
+                  field={field}
+                  label="Password"
+                  type="password"
+                  disabled={isSubmitting}
+                />
+              )}
+            </Field>
+
+            <Field name="rememberMe">
+              {(field) => (
+                <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
+                  <input
+                    type="checkbox"
+                    id={field.name}
+                    name={field.name}
+                    checked={field.state.value}
+                    onBlur={field.handleBlur}
+                    onChange={(e) => field.handleChange(e.target.checked)}
+                    disabled={isSubmitting}
+                    className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                  <span>Stay logged in on this computer</span>
+                </label>
+              )}
+            </Field>
+
+            {loginError && (
+              <p className="text-sm text-red-600" role="alert">
+                {loginError}
+              </p>
+            )}
+
+            {isPreloadingDashboard && (
+              <p
+                className="text-sm text-slate-600"
+                role="status"
+                aria-live="polite"
+              >
+                Preparing your workspace…
+              </p>
+            )}
+
+            <button
+              type="submit"
+              disabled={!canSubmit || isSubmitting}
+              className="mt-2 flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:bg-indigo-300"
+            >
+              {isSubmitting ? (
+                <Loader2
+                  className="size-5 shrink-0 animate-spin"
+                  aria-hidden
+                />
+              ) : null}
+              {buttonLabel}
+            </button>
+          </form>
+        )
+      }}
+    />
   )
 }
 

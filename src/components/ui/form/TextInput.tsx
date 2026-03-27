@@ -4,6 +4,7 @@ interface TextInputProps {
   type: "text" | "password"
   placeholder?: string
   autoComplete?: string
+  disabled?: boolean
   wrapperClassName?: string
   labelClassName?: string
   inputClassName?: string
@@ -15,6 +16,7 @@ const TextInput = ({
   type,
   placeholder,
   autoComplete,
+  disabled = false,
   wrapperClassName = "",
   labelClassName = "",
   inputClassName = "",
@@ -30,12 +32,13 @@ const TextInput = ({
         {label}
       </label>
       <input
-        className={`h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 ${inputClassName}`}
+        className={`h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-[15px] text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-500 ${inputClassName}`}
         id={field.name}
         name={field.name}
         type={type}
         placeholder={placeholder}
         autoComplete={autoComplete}
+        disabled={disabled}
         value={field.state.value}
         onChange={(e) => field.handleChange(e.target.value)}
       />

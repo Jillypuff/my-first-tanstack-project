@@ -1,7 +1,9 @@
 import { useForm } from "@tanstack/react-form"
 import { useState } from "react"
+import { Link } from "@tanstack/react-router"
 import { registerFormSchema } from "@schemas/user"
 import { UserCollection } from "@/lib/db"
+import { LEGAL_DOCUMENTS_VERSION } from "@/lib/legal/constants"
 import { getSupabaseForRequest } from "@/lib/supabase/request"
 import TextInput from "../ui/form/TextInput"
 
@@ -9,6 +11,7 @@ const emptyRegisterValues = {
   email: "",
   password: "",
   confirm_password: "",
+  accept_legal: false,
 }
 
 const RegisterForm = () => {
@@ -32,6 +35,8 @@ const RegisterForm = () => {
         UserCollection.insert({
           id: data.user.id,
           email: data.user.email!,
+          terms_accepted_at: new Date().toISOString(),
+          terms_version: LEGAL_DOCUMENTS_VERSION,
         })
       }
 
@@ -83,6 +88,50 @@ const RegisterForm = () => {
       <Field name="confirm_password">
         {(field) => (
           <TextInput field={field} label="Confirm password" type="password" />
+        )}
+      </Field>
+      <Field name="accept_legal">
+        {(field) => (
+          <div className="space-y-1">
+            <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                id={field.name}
+                name={field.name}
+                checked={field.state.value}
+                onBlur={field.handleBlur}
+                onChange={(e) => field.handleChange(e.target.checked)}
+                className="mt-0.5 size-4 shrink-0 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+              />
+              <span>
+                I have read and agree to the{" "}
+                <Link
+                  to="/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-indigo-600 underline decoration-indigo-400/40 underline-offset-2 hover:text-indigo-500"
+                >
+                  Terms of Service
+                </Link>{" "}
+                and{" "}
+                <Link
+                  to="/privacy"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-indigo-600 underline decoration-indigo-400/40 underline-offset-2 hover:text-indigo-500"
+                >
+                  Privacy Policy
+                </Link>
+                .
+              </span>
+            </label>
+            {field.state.meta.errors && field.state.meta.errors.length > 0 ? (
+              <p className="text-sm text-red-600">
+                {field.state.meta.errors[0]?.message ??
+                  String(field.state.meta.errors[0])}
+              </p>
+            ) : null}
+          </div>
         )}
       </Field>
       <Subscribe

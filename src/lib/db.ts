@@ -23,7 +23,7 @@ export const UserCollection = createCollection(
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, email")
+        .select("id, email, terms_accepted_at, terms_version")
         .eq("id", authUser.id)
         .single()
 
@@ -31,7 +31,7 @@ export const UserCollection = createCollection(
         console.warn("Profile not found or error: ", error)
         return []
       }
-      return [data as User]
+      return [UserSchema.parse(data)]
     },
 
     onInsert: async ({ transaction }) => {
@@ -41,6 +41,8 @@ export const UserCollection = createCollection(
       const { error } = await supabase.from("profiles").insert({
         id: newUser.id,
         email: newUser.email,
+        terms_accepted_at: newUser.terms_accepted_at ?? null,
+        terms_version: newUser.terms_version ?? null,
       })
       if (error) throw error
       await queryClient.invalidateQueries({ queryKey: applicationsQueryKey })

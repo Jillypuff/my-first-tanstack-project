@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router"
 import TextInput from "../../ui/form/TextInput"
 
 interface ContactsProps {
@@ -7,6 +8,17 @@ interface ContactsProps {
 export const Contacts = ({ form }: ContactsProps) => {
   return (
     <div className="space-y-4 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+      <p className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs leading-relaxed text-slate-600">
+        Names, emails, and phone numbers you add here are personal data about other people. Only add
+        professional contact details you are allowed to use for your job search. See{" "}
+        <Link
+          to="/privacy#third-party-contacts"
+          className="font-medium text-indigo-600 underline decoration-indigo-400/40 underline-offset-2 hover:text-indigo-500"
+        >
+          Privacy Policy – Contacts you add about other people
+        </Link>
+        .
+      </p>
       <p className="text-xs font-semibold tracking-wide text-slate-500 uppercase">
         Contact 1
       </p>
