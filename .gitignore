@@ -10,5 +10,7 @@ dist-ssr
 .output
 .vercel
 .vinxi
+.vscode
+.supabase
 __unconfig*
 todos.json
