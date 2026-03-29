@@ -15,19 +15,58 @@ const applicationBaseSchema = z.object({
   status: applicationStatusSchema,
 })
 
-const contactsRelaxedSchema = z.object({
+const contactRowRelaxedSchema = z.object({
   name: z.string(),
   email: z.string(),
   phone: z.string(),
   note: z.string(),
 })
 
-const contactsEnabledSchema = z.object({
-  name: z.string().min(1, "Contact name is required"),
-  email: z.string().email("Email must be valid").or(z.literal("")),
-  phone: z.string(),
-  note: z.string(),
-})
+/** Empty rows are allowed; any non-empty row must include a name and valid email if set. */
+const contactRowEnabledSchema = z
+  .object({
+    name: z.string(),
+    email: z.string(),
+    phone: z.string(),
+    note: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    const hasAny = [data.name, data.email, data.phone, data.note].some((v) => v.trim())
+    if (!hasAny) return
+    if (!data.name.trim()) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Contact name is required",
+        path: ["name"],
+      })
+    }
+    const emailTrim = data.email.trim()
+    if (emailTrim !== "" && !z.string().email().safeParse(emailTrim).success) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Email must be valid",
+        path: ["email"],
+      })
+    }
+  })
+
+const contactsArrayRelaxedSchema = z.array(contactRowRelaxedSchema).max(3)
+
+const contactsArrayEnabledSchema = z
+  .array(contactRowEnabledSchema)
+  .max(3)
+  .superRefine((arr, ctx) => {
+    const hasAnyData = arr.some((c) =>
+      [c.name, c.email, c.phone, c.note].some((v) => v.trim()),
+    )
+    if (!hasAnyData) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Add at least one contact",
+        path: [0, "name"],
+      })
+    }
+  })
 
 const tagsRelaxedSchema = z.array(z.string())
 const tagsEnabledSchema = z.array(z.string().min(1)).max(5, "Max 5 tags")
@@ -77,7 +116,7 @@ const buildDetailsSchema = (enabled: ApplicationFeatureId[]) => {
 
   return z.object({
     notes: applicationNotesSchema,
-    contacts: hasFeature("contacts") ? contactsEnabledSchema : contactsRelaxedSchema,
+    contacts: hasFeature("contacts") ? contactsArrayEnabledSchema : contactsArrayRelaxedSchema,
     tags: hasFeature("tags") ? tagsEnabledSchema : tagsRelaxedSchema,
     job_criterias: hasFeature("job_criterias")
       ? jobCriteriasEnabledSchema
@@ -111,7 +150,7 @@ const applicationCompanySchema = z.object({
 
 const applicationDetailsSchema = z.object({
   notes: z.string().max(2000).default(""),
-  contacts: z.array(applicationContactSchema).default([]),
+  contacts: z.array(applicationContactSchema).max(3).default([]),
   tags: z.array(z.string()).max(5).default([]),
   job_criterias: z
     .array(

@@ -88,7 +88,7 @@ function ProfilePage() {
       await logout()
       await queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
       await queryClient.invalidateQueries({ queryKey: ["user"] })
-      navigate({ to: "/login" })
+      navigate({ to: "/" })
     } finally {
       setLogoutBusy(false)
     }
@@ -121,7 +121,7 @@ function ProfilePage() {
       await logout()
       await queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
       await queryClient.invalidateQueries({ queryKey: ["user"] })
-      navigate({ to: "/login" })
+      navigate({ to: "/" })
     } catch (e) {
       setDeleteError(e instanceof Error ? e.message : "Something went wrong.")
     } finally {

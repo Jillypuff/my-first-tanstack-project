@@ -39,7 +39,7 @@ const LoginForm = () => {
       }
       setIsPreloadingDashboard(true)
       try {
-        await navigate({ to: "/" })
+        await navigate({ to: "/dashboard" })
       } catch (err) {
         console.error("LoginForm navigate error:", err)
         setIsPreloadingDashboard(false)

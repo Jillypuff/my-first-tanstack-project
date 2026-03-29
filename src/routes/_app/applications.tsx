@@ -358,12 +358,17 @@ function ApplicationsPage() {
                 status: editingApplication.status,
                 details: {
                   notes: editingApplication.details.notes ?? "",
-                  contacts: editingApplication.details.contacts[0] ?? {
-                    name: "",
-                    email: "",
-                    phone: "",
-                    note: "",
-                  },
+                  contacts: (() => {
+                    const rows = editingApplication.details.contacts.slice(0, 3).map((c) => ({
+                      name: c.name ?? "",
+                      email: c.email ?? "",
+                      phone: c.phone ?? "",
+                      note: c.note ?? "",
+                    }))
+                    return rows.length > 0
+                      ? rows
+                      : [{ name: "", email: "", phone: "", note: "" }]
+                  })(),
                   tags: editingApplication.details.tags,
                   job_criterias: editingApplication.details.job_criterias,
                   company: editingApplication.details.company,

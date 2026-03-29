@@ -35,7 +35,7 @@ type FormValues = {
   status: ApplicationStatus
   details: {
     notes: string
-    contacts: FormContact
+    contacts: FormContact[]
     tags: string[]
     job_criterias: Array<{ title: string; track: boolean }>
     company: FormCompany
@@ -91,6 +91,31 @@ const FEATURES = [
   },
 ]
 
+const emptyContact = (): FormContact => ({
+  name: "",
+  email: "",
+  phone: "",
+  note: "",
+})
+
+const normalizeFormContacts = (
+  incoming: FormContact[] | FormContact | undefined,
+): FormContact[] => {
+  const rows = Array.isArray(incoming)
+    ? incoming
+    : incoming
+      ? [incoming]
+      : []
+  const mapped = rows.slice(0, 3).map((c) => ({
+    name: c.name ?? "",
+    email: c.email ?? "",
+    phone: c.phone ?? "",
+    note: c.note ?? "",
+  }))
+  if (mapped.length === 0) return [emptyContact()]
+  return mapped
+}
+
 const defaultValues: FormValues = {
   company_name: "",
   job_title: "",
@@ -98,12 +123,7 @@ const defaultValues: FormValues = {
   status: "applied",
   details: {
     notes: "",
-    contacts: {
-      name: "",
-      email: "",
-      phone: "",
-      note: "",
-    },
+    contacts: [emptyContact()],
     tags: [],
     job_criterias: [],
     company: {
@@ -135,10 +155,9 @@ const ApplicationForm = ({
       details: {
         ...defaultValues.details,
         ...(initialValues?.details ?? {}),
-        contacts: {
-          ...defaultValues.details.contacts,
-          ...(initialValues?.details?.contacts ?? {}),
-        },
+        contacts: normalizeFormContacts(
+          initialValues?.details?.contacts ?? defaultValues.details.contacts,
+        ),
         company: {
           ...defaultValues.details.company,
           ...(initialValues?.details?.company ?? {}),
@@ -150,8 +169,12 @@ const ApplicationForm = ({
 
   const [enabledFeatures, setEnabledFeatures] = useState<FeatureId[]>(() => {
     const enabled: FeatureId[] = []
-    const contact = mergedInitialValues.details.contacts
-    if ([contact.name, contact.email, contact.phone, contact.note].some((v) => v.trim())) {
+    const contacts = mergedInitialValues.details.contacts
+    if (
+      contacts.some((contact) =>
+        [contact.name, contact.email, contact.phone, contact.note].some((v) => v.trim()),
+      )
+    ) {
       enabled.push("contacts")
     }
     if (mergedInitialValues.details.tags.length > 0) {
@@ -177,10 +200,11 @@ const ApplicationForm = ({
     onSubmit: async ({ value, formApi }) => {
       setSaveFeedback(null)
 
-      const contact = value.details.contacts
-      const hasContactValue = [contact.name, contact.email, contact.phone, contact.note]
-        .map((item) => item.trim())
-        .some(Boolean)
+      const contactsFilled = value.details.contacts.filter((contact) =>
+        [contact.name, contact.email, contact.phone, contact.note]
+          .map((item) => item.trim())
+          .some(Boolean),
+      )
 
       const normalizedInput: NormalizedApplicationInput = {
         company_name: value.company_name,
@@ -189,7 +213,7 @@ const ApplicationForm = ({
         status: value.status,
         details: {
           notes: value.details.notes,
-          contacts: hasContactValue ? [contact] : [],
+          contacts: contactsFilled,
           tags: value.details.tags,
           job_criterias: value.details.job_criterias,
           company: value.details.company,
@@ -214,7 +238,7 @@ const ApplicationForm = ({
               date_applied: new Date().toISOString().split("T")[0],
               details: {
                 notes: "",
-                contacts: { ...defaultValues.details.contacts },
+                contacts: [emptyContact()],
                 tags: [],
                 job_criterias: [],
                 company: { ...defaultValues.details.company },
@@ -257,7 +281,7 @@ const ApplicationForm = ({
             date_applied: new Date().toISOString().split("T")[0],
             details: {
               notes: "",
-              contacts: { ...defaultValues.details.contacts },
+              contacts: [emptyContact()],
               tags: [],
               job_criterias: [],
               company: { ...defaultValues.details.company },
@@ -457,7 +481,7 @@ const ApplicationForm = ({
             type="button"
             onClick={() => setIsFeaturePickerOpen((current) => !current)}
             disabled={availableFeatures.length === 0}
-            className="w-full rounded-2xl border-2 border-dashed border-slate-200 bg-white py-3 text-base font-semibold text-slate-400 transition hover:bg-slate-50 hover:text-slate-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-2xl border-2 border-dashed border-slate-300 bg-white py-3 text-base font-semibold text-slate-700 transition hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             + Add more details {isFeaturePickerOpen ? "˄" : "˅"}
           </button>

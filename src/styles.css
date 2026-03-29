@@ -12,8 +12,6 @@
 body {
   margin: 0;
   font-family: "Inter", system-ui, sans-serif;
-  background-color: var(--bg-color);
-  color: var(--text-main);
   line-height: 1.6;
 }
 
@@ -32,39 +30,49 @@ body {
   flex: 1 0 auto;
 }
 
-footer {
-  flex-shrink: 0;
-  padding: 2rem;
-  background: var(--card-bg);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  text-align: center;
-}
-
-header {
-  height: var(--nav-height);
-  background: rgba(30, 41, 59, 0.8);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  display: flex;
-  align-items: center;
-  padding: 0 2rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  gap: 20px;
-}
-
-main {
-  max-width: 800px;
-  margin: 2rem auto;
-  padding: 0 1rem;
-}
-
 .fact-container {
   background: var(--card-bg);
   padding: 2rem;
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+}
+
+/*
+  Explicit content columns so auth header + forms stay aligned.
+  (Some environments were not applying max-w-* on nested header rows reliably.)
+*/
+.auth-content-width {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 64rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .auth-content-width {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+.marketing-content-width {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 72rem;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .marketing-content-width {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
 }
 

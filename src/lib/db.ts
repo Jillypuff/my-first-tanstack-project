@@ -114,6 +114,16 @@ export const ApplicationCollection = createCollection(
       })
 
       if (error) throw error
+
+      queryClient.setQueryData<Application[]>(applicationsQueryKey, (old) => {
+        const list = Array.isArray(old) ? old : []
+        if (list.some((a) => a.id === newApplication.id)) return list
+        return [newApplication, ...list]
+      })
+
+      await queryClient.invalidateQueries({ queryKey: applicationsQueryKey })
+
+      return { refetch: false }
     },
 
     onUpdate: async ({ transaction }) => {

@@ -14,7 +14,7 @@ import {
 import { applicationsQueryOptions } from "@/lib/application/applications"
 import { currentMonthKey, getDashboardTimeDefault } from "@/lib/preferences"
 
-export const Route = createFileRoute("/_app/")({
+export const Route = createFileRoute("/_app/dashboard")({
   component: DashboardPage,
 })
 

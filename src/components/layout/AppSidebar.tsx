@@ -2,7 +2,7 @@ import { Link, useRouterState } from "@tanstack/react-router"
 import { useAuthUser } from "@/lib/auth/store"
 
 const navItems = [
-  { to: "/", label: "Dashboard" },
+  { to: "/dashboard", label: "Dashboard" },
   { to: "/applications", label: "Applications" },
   { to: "/add", label: "Add Application" },
   { to: "/profile", label: "Profile" },
