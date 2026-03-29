@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { createFileRoute, Link } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
 import ApplicationForm from "@/components/application/ApplicationForm"
 import ApplicationCard from "@/components/application/ApplicationCard"
 import Card from "@/components/ui/Card"
@@ -12,8 +11,10 @@ import {
   applicationStatusLabels,
 } from "@/lib/application/application-status"
 import { type ApplicationStatus } from "@/schemas/application"
-import { applicationsQueryOptions } from "@/lib/application/applications"
-import { getSupabaseForRequest } from "@/lib/supabase/request"
+import {
+  ApplicationCollection,
+  useApplicationsLive,
+} from "@/lib/db"
 
 export const Route = createFileRoute("/_app/applications")({
   component: ApplicationsPage,
@@ -33,9 +34,8 @@ function ApplicationsPage() {
   )
   const editFormSectionRef = useRef<HTMLElement | null>(null)
   const scrollYBeforeEditRef = useRef<number | null>(null)
-  const { data: applications = [], isLoading, error, refetch } = useQuery(
-    applicationsQueryOptions,
-  )
+  const { data: applications = [], isLoading, isError } = useApplicationsLive()
+  const error = ApplicationCollection.utils.lastError
 
   const monthOptions = useMemo(() => {
     const uniqueMonths = new Set<string>()
@@ -142,12 +142,12 @@ function ApplicationsPage() {
     const shouldDelete = window.confirm("Delete this application?")
     if (!shouldDelete) return
 
-    const supabase = await getSupabaseForRequest()
-    const { error } = await supabase.from("applications").delete().eq("id", applicationId)
-    if (error) {
+    try {
+      const tx = ApplicationCollection.delete(applicationId)
+      await tx.isPersisted.promise
+    } catch {
       return
     }
-    await refetch()
   }
 
   const scrollToPositionBeforeEdit = (savedY: number | null) => {
@@ -244,7 +244,7 @@ function ApplicationsPage() {
 
       {isLoading ? (
         <LoadingPanel>Loading applications...</LoadingPanel>
-      ) : error ? (
+      ) : isError ? (
         <ErrorPanel>
           {error instanceof Error ? error.message : "Failed to load applications."}
         </ErrorPanel>
@@ -386,23 +386,17 @@ function ApplicationsPage() {
               onSubmitApplication={async (value) => {
                 const scrollYBeforeEdit = scrollYBeforeEditRef.current
                 const now = new Date().toISOString()
-                const supabase = await getSupabaseForRequest()
-                const { error } = await supabase
-                  .from("applications")
-                  .update({
-                    company_name: value.company_name,
-                    job_title: value.job_title,
-                    date_applied: value.date_applied,
-                    status: value.status,
-                    details: value.details,
-                    updated_at: now,
-                    last_activity_at: now,
-                  })
-                  .eq("id", editingApplication.id)
-
-                if (error) throw error
+                const tx = ApplicationCollection.update(editingApplication.id, (draft) => {
+                  draft.company_name = value.company_name
+                  draft.job_title = value.job_title
+                  draft.date_applied = value.date_applied
+                  draft.status = value.status
+                  draft.details = value.details
+                  draft.updated_at = now
+                  draft.last_activity_at = now
+                })
+                await tx.isPersisted.promise
                 setEditingApplicationId(null)
-                await refetch()
 
                 scrollToPositionBeforeEdit(scrollYBeforeEdit)
               }}

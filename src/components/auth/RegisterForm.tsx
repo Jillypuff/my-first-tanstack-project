@@ -32,12 +32,13 @@ const RegisterForm = () => {
       if (error) throw error
 
       if (data.user) {
-        UserCollection.insert({
+        const profileTx = UserCollection.insert({
           id: data.user.id,
           email: data.user.email!,
           terms_accepted_at: new Date().toISOString(),
           terms_version: LEGAL_DOCUMENTS_VERSION,
         })
+        await profileTx.isPersisted.promise
       }
 
       setConfirmationSentTo(email)

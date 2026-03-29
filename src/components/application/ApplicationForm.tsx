@@ -261,7 +261,7 @@ const ApplicationForm = ({
 
       const nowIso = new Date().toISOString()
 
-      await ApplicationCollection.insert({
+      const insertTx = ApplicationCollection.insert({
         id: crypto.randomUUID(),
         user_id: authUser.id,
         ...normalizedInput,
@@ -269,6 +269,7 @@ const ApplicationForm = ({
         updated_at: nowIso,
         last_activity_at: nowIso,
       })
+      await insertTx.isPersisted.promise
 
       if (mode === "create") {
         setSaveFeedback("Application saved successfully.")

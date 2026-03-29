@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react"
 import { createFileRoute } from "@tanstack/react-router"
-import { useQuery } from "@tanstack/react-query"
 import ApplicationStatusBadge from "@/components/application/ApplicationStatusBadge"
 import Card from "@/components/ui/Card"
 import ErrorPanel from "@/components/ui/feedback/ErrorPanel"
@@ -11,7 +10,10 @@ import {
   APPLICATION_STATUS_ORDER,
   applicationStatusMeta,
 } from "@/lib/application/application-status"
-import { applicationsQueryOptions } from "@/lib/application/applications"
+import {
+  ApplicationCollection,
+  useApplicationsLive,
+} from "@/lib/db"
 import { currentMonthKey, getDashboardTimeDefault } from "@/lib/preferences"
 
 export const Route = createFileRoute("/_app/dashboard")({
@@ -22,7 +24,8 @@ function DashboardPage() {
   const [selectedMonth, setSelectedMonth] = useState(() =>
     getDashboardTimeDefault() === "all" ? "all" : currentMonthKey(),
   )
-  const { data: applications = [], isLoading, error } = useQuery(applicationsQueryOptions)
+  const { data: applications = [], isLoading, isError } = useApplicationsLive()
+  const error = ApplicationCollection.utils.lastError
 
   const monthOptions = useMemo(() => {
     const uniqueMonths = new Set<string>()
@@ -153,7 +156,7 @@ function DashboardPage() {
 
       {isLoading ? (
         <LoadingPanel>Loading applications...</LoadingPanel>
-      ) : error ? (
+      ) : isError ? (
         <ErrorPanel>
           {error instanceof Error ? error.message : "Failed to load applications."}
         </ErrorPanel>
